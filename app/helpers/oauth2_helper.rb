@@ -4,7 +4,7 @@ module Oauth2Helper
 		@oauth2_client_request = Oauth2::Request.new params
 	end
 
-	def check_oauth2_response_type
+	def verify_oauth2_response_type
 		# @oauth2_response_type = params.fetch(:response_type, nil)
 		# valid_type = @oauth2_client_request.response_type_valid?
 		render :nothing => true, :status => :bad_request unless @oauth2_client_request.response_type_valid?

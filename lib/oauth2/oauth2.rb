@@ -1,13 +1,14 @@
 require "addressable/uri"
 
 module OAUTH2
-
   class Request
-    RESPONSE_TYPES = %w{ code token }
-    GRANT_TYPES = %w{ :authorization_code password token client_credentials }
 
-    attr_reader :response_type, :client_id, :state, :scope, :authenticated
-    private attr_accessor :errors
+    RESPONSE_TYPES = %w{ code token }
+    GRANT_TYPES = %{ authorization_code password token client_credentials refresh_token }
+
+    attr_reader :response_type, :client_id, :state, :scope, :authenticated, :errors
+    private attr_writer :errors
+
     def initialize(opts={})
        @response_type = opts[:response_type]
        @client_id = opts[:client_id]
@@ -20,7 +21,7 @@ module OAUTH2
        @errors = {}
     end
 
-    def authenticated?
+    def valid?
       return @authenticated unless @authenticated.nil?
       authenticate_client
     end
@@ -33,22 +34,6 @@ module OAUTH2
       @redirect_uri
     end
 
-    def client_id_valid?
-      validate_client_id
-    end
-
-    def scope_valid?
-
-    end
-
-    def response_type_valid?
-      validate_response_type
-    end
-
-    def redirect_uri_valid?
-      validate_redirect_uri
-    end
-
     def authorization_redirect_uri(allow) 
       build_response_uri authorization_response
     end
@@ -57,25 +42,7 @@ module OAUTH2
       build_response_uri access_token_response
     end
 
-    def access_token
-      # { :access_token => %%, :expires_in => %%, :token_type => %%}
-      generate_access_token
-    end
-
   private
-    
-    def client_application
-      return @client_application unless @client_application.nil?
-      validate_client_id
-    end
-
-    def build_response_uri(params={})
-      uri = Addressable::URI.parse(redirect_uri)
-      response_params = uri.query_values
-      response_params.merge! params
-      uri.query_values = response_params
-      return uri
-    end
 
     def authorization_response
       params = {}
@@ -89,9 +56,21 @@ module OAUTH2
       params.merge! access_token
     end
 
-    def user_credentials_valid?
-      return false unless (@username && @password)
-      # User.check @username, @password
+    def client_id_valid?
+      validate_client_id
+    end
+    
+    def client_application
+      return @client_application unless @client_application.nil?
+      validate_client_id
+    end
+
+    def build_response_uri(params={})
+      uri = Addressable::URI.parse(redirect_uri)
+      response_params = uri.query_values
+      response_params.merge! params
+      uri.query_values = response_params
+      return uri
     end
 
     def authenticate_client
@@ -120,20 +99,9 @@ module OAUTH2
       end
     end
 
-    def validate_redirect_uri
-      errors[:redirect_uri] = []
-      if @redirect_uri.nil?
-        errors[:redirect_uri] << "Redirect uri is not valid. Provide and absolute URI"
-      else
-        uri = Addressable::URI.parse(@redirect_uri)
-        unless ["http", "https"].include? uri.scheme
-          errors[:redirect_uri] << "uri scheme is missing or unsupported"
-        end
-        unless uri.fragment.nil?
-          errors[:redirect_uri] << "malformed uri must not include URI fragment"
-        end
-      end
-      errors[:redirect_uri].any? ? false : true
+    def validate_user_credentials
+      return false unless (@username && @password)
+      # User.check @username, @password
     end
 
     def validate_response_type
@@ -150,6 +118,22 @@ module OAUTH2
 
     def validate_scope(&block)
       raise "Fix Me"
+    end
+
+    def validate_redirect_uri
+      errors[:redirect_uri] = []
+      if @redirect_uri.nil?
+        errors[:redirect_uri] << "Redirect uri is not valid. Provide and absolute URI"
+      else
+        uri = Addressable::URI.parse(@redirect_uri)
+        unless ["http", "https"].include? uri.scheme
+          errors[:redirect_uri] << "uri scheme is missing or unsupported"
+        end
+        unless uri.fragment.nil?
+          errors[:redirect_uri] << "malformed uri must not include URI fragment"
+        end
+      end
+      errors[:redirect_uri].any? ? false : true
     end
 
     def generate_authorization_code

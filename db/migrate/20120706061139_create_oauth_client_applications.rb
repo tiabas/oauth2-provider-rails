@@ -8,8 +8,10 @@ class CreateOauthClientApplications < ActiveRecord::Migration
     	t.string :client_type
     	t.string :client_id
     	t.string :client_secret
-     #t.string :code
-     #t.datetmime :code_created_at
+    	# t.string :access_token
+    	# t.string :refresh_token
+     	# t.string :code
+     	# t.datetmime :code_created_at
     	t.timestamps
     end
   end
