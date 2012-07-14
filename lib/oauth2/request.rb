@@ -7,41 +7,34 @@ module OAUTH2
       RESPONSE_TYPES = %w{ code token }
       GRANT_TYPES = %{ authorization_code password token client_credentials refresh_token }
 
-      attr_reader :response_type, :client_id, :state, :scope, :authenticated, :errors
+      attr_reader :response_type, :grant_type, :client_id, :client_secret, :state, :scope, 
+                  :authenticated, :errors
       private attr_writer :errors
+
+
+      def self.from_http_request
+        # create request from http headers
+      end
 
       def initialize(opts={})
         @response_type = opts[:response_type]
-        @client_id = opts[:client_id]
-        @state = opts[:state]
-        @grant_type = opts[:grant_type]
-        @scope = opts[:scope]
-        @username = opts[:username]
-        @password = opts[:password]
-        @redirect_uri = Addressable::URI.unencode opts[:redirect_uri]
-        @errors = {}
-      end
-
-      def valid?
-        return @authenticated unless @authenticated.nil?
-        authenticate_client
-      end
-      
-      def client_valid?
-        client_application
+        @grant_type    = opts[:grant_type]
+        @client_id     = opts[:client_id]
+        @client_secret = opts[:client_secret]
+        @state         = opts[:state]
+        @scope         = opts[:scope]
+        @username      = opts[:username]
+        @password      = opts[:password]
+        @redirect_uri  = opts[:redirect_uri]
+        @errors        = {}
       end
 
       def client_application
-        return @client_application unless @client_application.nil?
-        authenticate_client
+        @client_application || validate_client_credentials
       end
 
       def redirect_uri
-        @redirect_uri  ||= (client_application ? client_application.redirect_uri : nil )
-        unless redirect_uri_valid?
-          raise InvalidRequest, errors[:redirect_uri].join(" ")
-        end
-        @redirect_uri
+        validate_redirect_uri
       end
 
       def authorization_redirect_uri(allow) 
@@ -53,6 +46,21 @@ module OAUTH2
       end
       
   private
+      def missing?(*values)
+        values.inject(true) {|a, b| a && b.nil? }
+      end
+
+      def authorization_response
+        params = {}
+        params[:state] = state unless state.nil?
+        params[:code] = generate_authorization_code
+      end
+
+      def access_token_response
+        params = {}
+        params[:refresh_token] = generate_refresh_token if response_type == "code"
+        params.merge! access_token
+      end
 
       def build_response_uri(params={})
         uri = Addressable::URI.parse(redirect_uri)
@@ -62,55 +70,49 @@ module OAUTH2
         return uri
       end
 
-      def authenticate_client
-        begin
-          @client_application = Oauth2ClientApplication.find_by_client_id @client_id
-          @authenticated = begin
-              case grant_type
-                  when "client_credentials"
-                    return true if client_application.confidential?
-                    @errors[:credentials] << "Unauthorized client"
-                    false
-                  when "password" 
-                    return true if validate_user_credentials
-                    @errors[:credentials] << "Invalid username or password"
-                    false
-                  else
-                    true
-              end
-          end
-        rescue ActiveRecord::RecordNotFound
-
-      end
-
-      def validate_client_id
-        begin
-            
-        rescue
-            @errors[:client_id] = "Client with id provided not found"
-            false
+      def validate_client_credentials
+        if @client_id.nil? && @client_secret.nil?
+          errs = ["Missing parameters: "]
+          errs << "client_id" if @client_id.nil?
+          errs << "client_secret" if @client_id.nil?
+          @errors[:client] = errs.join(" ")
+          raise OAUTH2Error::InvalidRequest, @errors[:client]
         end
+        @client_application = Oauth2ClientApplication.where(
+                              :client_id     => @client_id,
+                              :client_secret => @client_secret
+                              ).first!
+      rescue ActiveRecord::RecordNotFound
+         @errors[:client] = "Unauthorized Client"
+        raise OAUTH2Error::UnauthorizedClient
       end
 
       def validate_user_credentials
-        return false unless (@username && @password)
-        # User.check @username, @password
+        unless @username && @password
+          # throw error
+        end
+        user = User.authenticate @username, @password
+        return user unless user.nil?
+        @errors[:credentials] = "Invalid username or password"
+        raise OAUTH2Error::AccessDenied
       end
 
       def validate_response_type
         return true if RESPONSE_TYPES.include? @response_type
         @errors[:response_type] = "Invalid response type"
-        false
+        raise OAUTH2Error::UnsupportedResponseType
       end
 
       def validate_grant_type
         return true if GRANT_TYPES.include? @grant_type
-        @errors[:grant_type] = "UnsupportedGrantType"
-        false
+        @errors[:grant_type] = "Unsupported grant type"
+        raise OAUTH2Error::UnsupportedGrantType
       end
 
       def validate_scope(&block)
-        raise "Fix Me"
+        # FIX ME!!
+        @errors[:scope] = "InvalidScope"
+        raise OAUTH2Error::InvalidScope
       end
 
       def validate_redirect_uri
@@ -126,7 +128,8 @@ module OAUTH2
                 errors[:redirect_uri] << "malformed uri must not include URI fragment"
             end
         end
-        errors[:redirect_uri].any? ? false : true
+        return uri if client_application.redirect_uri == uri && !errors[:redirect_uri].any?
+        raise OAUTH2Error::InvalidRequest, errors[:redirect_uri].join(" ")
       end
 
       def generate_authorization_code

@@ -1,5 +1,5 @@
 module OAUTH2
-  module Server
+  module OAuth2Error
     class OAuth2Error < StandardError
       attr_reader :response, :code, :description
 

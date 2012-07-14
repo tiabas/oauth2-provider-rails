@@ -12,4 +12,6 @@ module Oauth2Helper
     render :nothing => true, :status => :bad_request unless @oauth2_client_request.response_type_valid?
   end
 
+  # check that client id if valid
+
 end
