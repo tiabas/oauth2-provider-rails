@@ -1,7 +1,9 @@
 module OAUTH2
-	class Token
-		def initialize
-
+	module Server
+		class Token
+			def initialize
+				
+			end
 		end
 	end
 end

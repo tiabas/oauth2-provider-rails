@@ -1,17 +1,17 @@
 module OAUTH2
-	module ServerMethods
-		def authorize
-	  	# render authorization page
-	  end
+	module Server
+		module RequestMethods
+			def authorize
+			# render authorization page
+			end
 
-	  # access_token, refresh_token
-	  def token
+			# access_token, refresh_token
+			def token
+			end
 
-	  end
-
-	  # register client
-	  def register
-
-	  end
+			# register client
+			def register
+			end
+		end
 	end
 end
