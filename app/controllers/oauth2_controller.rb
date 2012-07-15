@@ -6,7 +6,28 @@ class Oauth2Controller < ApplicationController
 
   # request authorization
   def authorize
-    # render authorization page
+  # @params:
+  #  client_id     
+  #  client_secret
+  #  redirect_uri
+  #
+  #  Resource Owner Credentials   
+  #   grant_type => password
+  #   username
+  #   password
+  #
+  #  Client Credentials
+  #   grant_type => client_credentials  
+  #
+  #  
+  #
+  #
+  #
+  #
+  #
+  #
+  #
+  #
   end
 
   def process_authorization
@@ -16,7 +37,27 @@ class Oauth2Controller < ApplicationController
 
   # access_token, refresh_token
   def token
-
+  # @params:
+  #  client_id     
+  #  client_secret
+  #
+  #  Resource Owner Credentials   
+  #   grant_type => password
+  #   username
+  #   password
+  #
+  #  Client Credentials
+  #   grant_type => client_credentials  
+  #
+  #  Implicit Grant  
+  #   no grant type
+  #
+  #  Authorization Grant
+  #   grant_type => client_credentials  
+  #
+  #  Refresh token
+  #   grant_type => refresh_token
+  #
   end
 
   def register

@@ -4,13 +4,11 @@ module OAUTH2
   module Server
     class Request
 
-      RESPONSE_TYPES = %w{ code token }
-      GRANT_TYPES = %{ authorization_code password token client_credentials refresh_token }
+      RESPONSE_TYPES = [ :code, :token ]
+      GRANT_TYPES = [ :authorization_code, :password, :client_credentials :refresh_token ]
 
       attr_reader :response_type, :grant_type, :client_id, :client_secret, :state, :scope, 
                   :authenticated, :errors
-      private attr_writer :errors
-
 
       def self.from_http_request
         # create request from http headers
@@ -33,6 +31,14 @@ module OAUTH2
         @client_application || validate_client_credentials
       end
 
+      def client_valid?
+        !!client_application
+      end
+
+      def grant_type_valid?
+        validate_grant_type
+      end
+
       def redirect_uri
         validate_redirect_uri
       end
@@ -45,7 +51,8 @@ module OAUTH2
         build_response_uri access_token_response
       end
       
-  private
+    private
+    
       def missing?(*values)
         values.inject(true) {|a, b| a && b.nil? }
       end
@@ -53,17 +60,26 @@ module OAUTH2
       def authorization_response
         params = {}
         params[:state] = state unless state.nil?
-        params[:code] = generate_authorization_code
+        params[:code] = generate_authorization_code 
       end
 
       def access_token_response
+        client_valid? && grant_type_valid?
         params = {}
-        params[:refresh_token] = generate_refresh_token if response_type == "code"
+        params[:access_token] = generate_access_token if response_type == :code
+        params.merge! access_token
+      end
+
+      def refresh_token_response
+        raise unless (client_valid? && grant_type_valid?)
+        raise if grant_type != :refresh
+        params = {}
+        params[:refresh_token] = generate_refresh_token
         params.merge! access_token
       end
 
       def build_response_uri(params={})
-        uri = Addressable::URI.parse(redirect_uri)
+        uri = redirect_uri
         response_params = uri.query_values
         response_params.merge! params
         uri.query_values = response_params
@@ -98,13 +114,13 @@ module OAUTH2
       end
 
       def validate_response_type
-        return true if RESPONSE_TYPES.include? @response_type
+        return RESPONSE_TYPES.include? @response_type
         @errors[:response_type] = "Invalid response type"
         raise OAUTH2Error::UnsupportedResponseType
       end
 
       def validate_grant_type
-        return true if GRANT_TYPES.include? @grant_type
+        return GRANT_TYPES.include? @grant_type || response_type == :token
         @errors[:grant_type] = "Unsupported grant type"
         raise OAUTH2Error::UnsupportedGrantType
       end
@@ -121,34 +137,30 @@ module OAUTH2
             errors[:redirect_uri] << "Redirect uri is not valid. Provide and absolute URI"
         else
             uri = Addressable::URI.parse(@redirect_uri)
-            unless ["http", "https"].include? uri.scheme
-                errors[:redirect_uri] << "uri scheme is missing or unsupported"
+            unless uri.scheme == "https" 
+                errors[:redirect_uri] << "uri scheme is unsupported"
             end
             unless uri.fragment.nil?
                 errors[:redirect_uri] << "malformed uri must not include URI fragment"
             end
         end
-        return uri if client_application.redirect_uri == uri && !errors[:redirect_uri].any?
+        return @redirect_uri if client_application.redirect_uri == @redirect_uri && !errors[:redirect_uri].any?
         raise OAUTH2Error::InvalidRequest, errors[:redirect_uri].join(" ")
       end
 
       def generate_authorization_code
-        raise unless client_application
         client_application.generate_code 
       end
 
       def generate_request_token
-        raise unless client_application
         client_application.generate_request_token 
       end
 
       def generate_access_token
-        raise unless client_application
         client_application.generate_access_token
       end
 
       def generate_refresh_token
-        raise unless client_application
         client_application.generate_refresh_token
       end
     end
