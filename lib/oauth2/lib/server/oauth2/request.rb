@@ -58,24 +58,29 @@ module OAUTH2
       end
 
       def authorization_response
+        response_type_valid?
         params = {}
         params[:state] = state unless state.nil?
         params[:code] = generate_authorization_code 
       end
 
       def access_token_response
-        client_valid? && grant_type_valid?
-        params = {}
-        params[:access_token] = generate_access_token if response_type == :code
-        params.merge! access_token
+        client_valid? && (grant_type_valid? || response_type_valid?)
+        { 
+          :access_token => generate_access_token,
+          # FIX THIS CRAP!!!!!!!!!!!!!!!
+          :refresh_token => generate_refresh_token
+        }
       end
 
       def refresh_token_response
-        raise unless (client_valid? && grant_type_valid?)
-        raise if grant_type != :refresh
-        params = {}
-        params[:refresh_token] = generate_refresh_token
-        params.merge! access_token
+        client_valid? && grant_type_valid?
+        if grant_type != :refresh
+          raise OAUTH2Error::InvalidRequest, "grant_type is missing or unsupported"
+        end
+        {
+          :refresh_token => generate_refresh_token
+        }
       end
 
       def build_response_uri(params={})
@@ -120,7 +125,7 @@ module OAUTH2
       end
 
       def validate_grant_type
-        return GRANT_TYPES.include? @grant_type || response_type == :token
+        return GRANT_TYPES.include? @grant_type
         @errors[:grant_type] = "Unsupported grant type"
         raise OAUTH2Error::UnsupportedGrantType
       end
