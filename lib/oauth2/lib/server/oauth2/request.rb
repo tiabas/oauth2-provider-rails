@@ -15,15 +15,15 @@ module OAUTH2
       end
 
       def initialize(opts={})
-        @response_type = opts[:response_type]
-        @grant_type    = opts[:grant_type]
         @client_id     = opts[:client_id]
         @client_secret = opts[:client_secret]
+        @redirect_uri  = opts[:redirect_uri]
+        @response_type = opts[:response_type]
+        @grant_type    = opts[:grant_type]
         @state         = opts[:state]
         @scope         = opts[:scope]
         @username      = opts[:username]
         @password      = opts[:password]
-        @redirect_uri  = opts[:redirect_uri]
         @errors        = {}
       end
 
@@ -43,11 +43,42 @@ module OAUTH2
         validate_redirect_uri
       end
 
-      def authorization_redirect_uri(allow) 
+      def authorization_code
+        # 
+        client_valid? && response_type_valid?
+        generate_authorization_code
+      end
+
+      def authorization_response
+        # {
+        #   :code => "2YotnFZFEjr1zCsicMWpAA", 
+        #   :state => "auth",
+        # }
+        response = { 
+          :code => authorization_code
+        }
+        response[:state] = state unless state.nil?
+        response 
+      end
+
+      def authorization_redirect_uri(allow=false) 
+        # https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA&state=xyz
         build_response_uri authorization_response
       end
 
-      def token_response_redirect_uri(allow) 
+      def access_token
+        # {
+        #   :access_token => "2YotnFZFEjr1zCsicMWpAA", 
+        #   :token_type => "bearer",
+        #   :expires_in => 31536000,
+        #   :refresh_token => "tGzv3JOkF0XG5Qx2TlKWIA",
+        # }
+        client_valid? && (grant_type_valid? || response_type_valid?)
+        generate_access_token.to_hash
+      end
+
+      def access_token_redirect_uri
+        # http://example.com/cb#access_token=2YotnFZFEjr1zCsicMWpAA&state=xyz&token_type=example&expires_in=3600
         build_response_uri access_token_response
       end
       
@@ -55,22 +86,6 @@ module OAUTH2
     
       def missing?(*values)
         values.inject(true) {|a, b| a && b.nil? }
-      end
-
-      def authorization_response
-        response_type_valid?
-        params = {}
-        params[:state] = state unless state.nil?
-        params[:code] = generate_authorization_code 
-      end
-
-      def access_token_response
-        client_valid? && (grant_type_valid? || response_type_valid?)
-        { 
-          :access_token => generate_access_token,
-          # FIX THIS CRAP!!!!!!!!!!!!!!!
-          :refresh_token => generate_refresh_token
-        }
       end
 
       def refresh_token_response
@@ -157,16 +172,8 @@ module OAUTH2
         client_application.generate_code 
       end
 
-      def generate_request_token
-        client_application.generate_request_token 
-      end
-
       def generate_access_token
         client_application.generate_access_token
-      end
-
-      def generate_refresh_token
-        client_application.generate_refresh_token
       end
     end
   end
