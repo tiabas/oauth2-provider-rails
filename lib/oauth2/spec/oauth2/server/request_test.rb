@@ -49,7 +49,7 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
                             :redirect_uri => 'http://client.example.com/oauth_v2/callback',
                             :state => 'xyz',
                             })
-        # should stub request#generate_access_token
+        # should stub request#access_token
         redirect_uri = 'http://example.com/cb#access_token=2YotnFZFEjr1zCsicMWpAA&state=xyz&token_type=example&expires_in=3600'
         assert_equal redirect_uri, c.access_token_redirect_uri 
     end
@@ -62,6 +62,7 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
                             :username => 'johndoe',
                             :password => 'A3ddj3w'
                             })
+        # should stub request#access_token
         assert_equal @token_response, JSON.parse(c.access_token)
     end
     
@@ -71,6 +72,18 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
                             :client_secret => @client_secret,
                             :grant_type => 'client_credentials'
                             })
+        # should stub request#access_token
+        assert_equal @token_response, JSON.parse(c.access_token)
+    end
+
+    def test_refresh_token_request_should_return_access_token
+        c = OAUTH2::Client.new({
+                            :client_id => @client_id,
+                            :client_secret => @client_secret,
+                            :grant_type => 'refresh_token',
+                            :refresh_token => @refresh_token
+                            })
+        # should stub request#access_token
         assert_equal @token_response, JSON.parse(c.access_token)
     end
 end

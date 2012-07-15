@@ -1,4 +1,5 @@
-require "addressable/uri"
+require 'addressable/uri'
+require 'uri'
 
 module OAUTH2
   module Server
@@ -70,7 +71,7 @@ module OAUTH2
         # {
         #   :access_token => "2YotnFZFEjr1zCsicMWpAA", 
         #   :token_type => "bearer",
-        #   :expires_in => 31536000,
+        #   :expires_in => 3600,
         #   :refresh_token => "tGzv3JOkF0XG5Qx2TlKWIA",
         # }
         client_valid? && (grant_type_valid? || response_type_valid?)
@@ -79,7 +80,7 @@ module OAUTH2
 
       def access_token_redirect_uri
         # http://example.com/cb#access_token=2YotnFZFEjr1zCsicMWpAA&state=xyz&token_type=example&expires_in=3600
-        build_response_uri access_token_response
+        build_response_uri :fragment_params => access_token
       end
       
     private
@@ -87,7 +88,7 @@ module OAUTH2
       def missing?(*values)
         values.inject(true) {|a, b| a && b.nil? }
       end
-
+      
       def refresh_token_response
         client_valid? && grant_type_valid?
         if grant_type != :refresh
@@ -98,11 +99,10 @@ module OAUTH2
         }
       end
 
-      def build_response_uri(params={})
-        uri = redirect_uri
-        response_params = uri.query_values
-        response_params.merge! params
-        uri.query_values = response_params
+      def build_response_uri(query_params={}, fragment_params=nil)
+        uri = Addressable::URI.parse redirect_uri
+        uri.query_values = Addressable::URI.form_encode query_params unless query_params.nil?
+        uri.fragment = Addressable::URI.form_encode fragment_params unless fragment_params.nil?
         return uri
       end
 
@@ -158,14 +158,17 @@ module OAUTH2
         else
             uri = Addressable::URI.parse(@redirect_uri)
             unless uri.scheme == "https" 
-                errors[:redirect_uri] << "uri scheme is unsupported"
+                errors[:redirect_uri] << "URI scheme is unsupported"
             end
             unless uri.fragment.nil?
-                errors[:redirect_uri] << "malformed uri must not include URI fragment"
+                errors[:redirect_uri] << "URI should not include URI fragment"
+            end
+            unless uri.query.nil?
+                errors[:redirect_uri] << "URI should not include query string"
             end
         end
         return @redirect_uri if client_application.redirect_uri == @redirect_uri && !errors[:redirect_uri].any?
-        raise OAUTH2Error::InvalidRequest, errors[:redirect_uri].join(" ")
+        raise OAUTH2Error::InvalidRequest, errors[:redirect_uri].join(", ")
       end
 
       def generate_authorization_code
