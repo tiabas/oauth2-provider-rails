@@ -2,7 +2,7 @@ require 'request'
 module OAuth2
     module HelperMethods
       def create_oauth_client_request
-        @oauth2_client_request = Oauth2::Request.new params
+        @oauth2_client_request = Oauth2::Server::Request.new params
       end
 
       def verify_oauth2_client

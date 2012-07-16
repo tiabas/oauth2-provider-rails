@@ -10,7 +10,7 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
     @access_token = '2YotnFZFEjr1zCsicMWpAA'
     @refresh_token = 'tGzv3JOkF0XG5Qx2TlKWIA'
     @expires_in = 3600
-    @token_type = 'example'
+    @token_type = 'Bearer'
     @token_response = {
                         :access_token => @access_token,
                         :refresh_token => @refresh_token
@@ -67,7 +67,7 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   end
   
   def test_client_credentials_should_return_access_token
-    c = OAUTH2::Client.new({
+    c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
                         :client_secret => @client_secret,
                         :grant_type => 'client_credentials'
@@ -77,7 +77,7 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   end
 
   def test_refresh_token_request_should_return_access_token
-    c = OAUTH2::Client.new({
+    c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
                         :client_secret => @client_secret,
                         :grant_type => 'refresh_token',

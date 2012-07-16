@@ -30,7 +30,7 @@ module OAuth2
       end
 
       def client_application
-        @client_application || validate_client_credentials
+        @client_application || validate_client_id
       end
 
       def client_valid?
@@ -117,9 +117,8 @@ module OAuth2
         # check if we already ran validation
         return unless @validated.nil?
 
-        # REQUIRED: Check that client_id and client_secret are valid
-        # automatically validates client_credentials grant type
-        validate_client_credentials
+        # REQUIRED: Check that client_id is valid
+        validate_client_id
 
         # REQUIRED: Either response_type or grant_type  
         if response_type.nil? && grant_type.nil?
@@ -135,6 +134,11 @@ module OAuth2
         # validate redirect uri if given grant_type is authorization_code or response_type is token
         if @response_type.to_sym == :token || @grant_type.to_sym == :authorization_code
           validate_redirect_uri
+        end
+
+        # validate code if grant_type is authorization_code
+        if @grant_type.to_sym == :client_credentials
+          validate_client_credentials
         end
 
         # validate code if grant_type is authorization_code
@@ -161,6 +165,15 @@ module OAuth2
         @code
       end
 
+      def validate_client_id
+        if @client_id.nil?
+          raise OAuth2Error::InvalidRequest, "Missing parameters: client_id"
+        end
+        @client_application = verify_client_id
+        return @client_application unless @client_application.nil?
+        raise OAuth2Error::InvalidClient
+      end
+
       def validate_client_credentials
         if @client_id.nil? && @client_secret.nil?
           @errors[:client] = []
@@ -168,7 +181,7 @@ module OAuth2
           @errors[:client] << "client_secret" if @client_secret.nil?
           raise OAuth2Error::InvalidRequest, "Missing parameters: #{@errors[:client].join(", ")}"
         end
-        @client_application = authenticate_client @client_id, @client_secret
+        authenticate_client @client_id, @client_secret
       # rescue Exception => e
       #   @errors[:client] = "Unauthorized Client"
       #   raise OAuth2Error::UnauthorizedClient, @errors[:client] 
@@ -228,6 +241,10 @@ module OAuth2
           raise OAuth2Error::InvalidRequest, "Redirect URI does not match the one on record"
         end
         @redirect_uri 
+      end
+
+      def verify_client_id
+        raise "FIX ME!!!!!"
       end
 
       def authenticate_client(client_id, client_secret)
