@@ -39,13 +39,13 @@ module OAuth2
 
       def grant_type_valid?
         !!validate_grant_type
-      rescue OAUTH2Error::InvalidRequest => e
+      rescue OAuth2Error::InvalidRequest => e
         false
       end
 
       def response_type_valid?
         !!validate_response_type
-      rescue OAUTH2Error::InvalidRequest => e
+      rescue OAuth2Error::InvalidRequest => e
         false
       end
 
@@ -57,7 +57,7 @@ module OAuth2
         # 
         validate()
         unless @response_type.to_sym == :code
-          raise OAUTH2Error::UnsupportedResponseType, "The response type, #{@response_type}, is not valid for this request"
+          raise OAuth2Error::UnsupportedResponseType, "The response type, #{@response_type}, is not valid for this request"
         end
         generate_authorization_code
       end
@@ -88,7 +88,7 @@ module OAuth2
         # }
         validate()
         unless (@grant_type || @response_type.to_sym == :token)
-          raise OAUTH2Error::InvalidRequest, "The grant type or response type provided is not valid"
+          raise OAuth2Error::InvalidRequest, "The grant type or response type provided is not valid"
         end
         generate_access_token.to_hash
       end
@@ -114,7 +114,7 @@ module OAuth2
 
         # REQUIRED: Either response_type or grant_type  
         if response_type.nil? && grant_type.nil?
-          raise OAUTH2Error::InvalidRequest, "Missing parameters: response_type or grant_type"
+          raise OAuth2Error::InvalidRequest, "Missing parameters: response_type or grant_type"
         end
 
         # validate response_type if given
@@ -132,16 +132,20 @@ module OAuth2
           validate_authorization_code
         end
 
+        if @grant_type.to_sym == :password
+          validate_user_credentials
+        end
+
         # cache validation result
         @validated = true
       end
 
       def validate_authorization_code
         if @code.nil?
-          raise OAUTH2Error::InvalidRequest, "Missing parameters: code"
+          raise OAuth2Error::InvalidRequest, "Missing parameters: code"
         end
         unless verify_authorization_code
-          raise OAUTH2Error::UnauthorizedClient, "Authorization code provided did not match client"
+          raise OAuth2Error::UnauthorizedClient, "Authorization code provided did not match client"
         end
         @code
       end
@@ -151,43 +155,43 @@ module OAuth2
           @errors[:client] = []
           @errors[:client] << "client_id" if @client_id.nil?
           @errors[:client] << "client_secret" if @client_secret.nil?
-          raise OAUTH2Error::InvalidRequest, "Missing parameters: #{@errors[:client].join(", ")}"
+          raise OAuth2Error::InvalidRequest, "Missing parameters: #{@errors[:client].join(", ")}"
         end
-        @client_application = Oauth2ClientApplication.where(
-                              :client_id     => @client_id,
-                              :client_secret => @client_secret
-                              ).first!
-      rescue ActiveRecord::RecordNotFound
-        @errors[:client] = "Unauthorized Client"
-        raise OAUTH2Error::UnauthorizedClient, @errors[:client] 
+        @client_application = authenticate_client @client_id, @client_secret
+      # rescue Exception => e
+      #   @errors[:client] = "Unauthorized Client"
+      #   raise OAuth2Error::UnauthorizedClient, @errors[:client] 
       end
 
       def validate_user_credentials
-        unless @username && @password
-          # throw error
+        if @username.nil? || @password.nil?
+          @errors[:user_credentials] = []
+          @errors[:user_credentials] << "username" if @username.nil?
+          @errors[:user_credentials] << "password" if @password.nil?
+          raise OAuth2Error::InvalidRequest, "Missing parameters: #{@errors[:user_credentials].join(", ")}"
         end
-        user = User.authenticate @username, @password
+        user = authenticate_user @username, @password
         return user unless user.nil?
-        @errors[:credentials] = "Invalid username or password"
-        raise OAUTH2Error::AccessDenied
+        @errors[:credentials] = "Invalid username and/or password"
+        raise OAuth2Error::AccessDenied
       end
 
       def validate_response_type
         return RESPONSE_TYPES.include? @response_type.to_sym
         @errors[:response_type] = "Invalid response type"
-        raise OAUTH2Error::UnsupportedResponseType
+        raise OAuth2Error::UnsupportedResponseType
       end
 
       def validate_grant_type
         return GRANT_TYPES.include? @grant_type.to_sym
         @errors[:grant_type] = "Unsupported grant type"
-        raise OAUTH2Error::UnsupportedGrantType
+        raise OAuth2Error::UnsupportedGrantType
       end
 
       def validate_scope
         # FIX ME!!
         @errors[:scope] = "InvalidScope"
-        raise OAUTH2Error::InvalidScope, "FIX ME!!!!!!"
+        raise OAuth2Error::InvalidScope, "FIX ME!!!!!!"
       end
 
       def validate_redirect_uri
@@ -207,19 +211,37 @@ module OAuth2
         end
 
         return @redirect_uri if client_application.redirect_uri == @redirect_uri && !errors[:redirect_uri].any?
-        raise OAUTH2Error::InvalidRequest, errors[:redirect_uri].join(", ")
+        raise OAuth2Error::InvalidRequest, errors[:redirect_uri].join(", ")
+      end
+
+      def authenticate_client(client_id, client_secret)
+      #   Oauth2ClientApplication.where(
+      #     :client_id     => @client_id,
+      #     :client_secret => @client_secret
+      #   ).first!
+      # rescue ActiveRecord::RecordNotFound
+      #   @errors[:client] = "Unauthorized Client"
+      #   raise OAuth2Error::UnauthorizedClient, @errors[:client] 
+        raise "FIX ME!!!!!"
+      end
+
+      def authenticate_user(username, password)
+        raise "FIX ME!!!!!"
       end
 
       def verify_authorization_code
-        client_application.verify_code(@code)
+        # client_application.verify_code(@code)
+        raise "FIX ME!!!!!"
       end
 
       def generate_authorization_code
-        client_application.generate_code 
+        # client_application.generate_code 
+        raise "FIX ME!!!!!"
       end
 
       def generate_access_token
-        client_application.generate_access_token
+        # client_application.generate_access_token
+        raise "FIX ME!!!!!"
       end
     end
   end
