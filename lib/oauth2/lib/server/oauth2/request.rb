@@ -108,8 +108,11 @@ module OAuth2
       end
 
       def validate
+        # check if we already ran validation
         return unless @validated.nil?
+
         # REQUIRED: Check that client_id and client_secret are valid
+        # automatically validates client_credentials grant type
         validate_client_credentials
 
         # REQUIRED: Either response_type or grant_type  
@@ -128,10 +131,12 @@ module OAuth2
           validate_redirect_uri
         end
 
+        # validate code if grant_type is authorization_code
         if @grant_type.to_sym == :authorization_code
           validate_authorization_code
         end
 
+        # validate user credentials if grant_type is password
         if @grant_type.to_sym == :password
           validate_user_credentials
         end
