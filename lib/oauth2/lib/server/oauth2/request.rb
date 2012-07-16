@@ -49,8 +49,14 @@ module OAuth2
         false
       end
 
-      def redirect_uri
+      def redirect_uri_valid?
         validate_redirect_uri
+      rescue OAuth2Error::InvalidRequest => e
+        false
+      end
+
+      def redirect_uri
+        @redirect_uri.nil? client_application.redirect_uri : validate_redirect_uri
       end
 
       def authorization_code
@@ -214,9 +220,14 @@ module OAuth2
         unless uri.query.nil?
             errors[:redirect_uri] << "URI should not include query string"
         end
+        if errors[:redirect_uri].any?
+          raise OAuth2Error::InvalidRequest, errors[:redirect_uri].join(", ")
+        end
 
-        return @redirect_uri if client_application.redirect_uri == @redirect_uri && !errors[:redirect_uri].any?
-        raise OAuth2Error::InvalidRequest, errors[:redirect_uri].join(", ")
+        unless client_application.redirect_uri == @redirect_uri
+          raise OAuth2Error::InvalidRequest, "Redirect URI does not match the one on record"
+        end
+        @redirect_uri 
       end
 
       def authenticate_client(client_id, client_secret)
