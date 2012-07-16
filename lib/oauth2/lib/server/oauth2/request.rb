@@ -93,8 +93,8 @@ module OAuth2
         #   :refresh_token => "tGzv3JOkF0XG5Qx2TlKWIA",
         # }
         validate()
-        unless (@grant_type || @response_type.to_sym == :token)
-          raise OAuth2Error::InvalidRequest, "The grant type or response type provided is not valid"
+        unless (@grant_type.nil? && @response_type.to_sym == :token)
+          raise OAuth2Error::UnsupportedResponseType, "The response type provided is not valid for this request"
         end
         generate_access_token.to_hash
       end
@@ -136,7 +136,7 @@ module OAuth2
           validate_redirect_uri
         end
 
-        # validate code if grant_type is authorization_code
+        # validate code if grant_type is client_credentials
         if @grant_type.to_sym == :client_credentials
           validate_client_credentials
         end
@@ -149,6 +149,11 @@ module OAuth2
         # validate user credentials if grant_type is password
         if @grant_type.to_sym == :password
           validate_user_credentials
+        end
+
+        # validate user credentials if grant_type is password
+        if @grant_type.to_sym == :refresh_token
+          validate_refresh_token
         end
 
         # cache validation result
@@ -210,6 +215,15 @@ module OAuth2
         return GRANT_TYPES.include? @grant_type.to_sym
         @errors[:grant_type] = "Unsupported grant type"
         raise OAuth2Error::UnsupportedGrantType
+      end
+
+      def validate_refresh_token
+        if @refresh_token.nil?
+          raise OAuth2Error::InvalidRequest, "Missing parameters: refresh_token"
+        end
+        token = verify_refresh_token
+        return true unless token.nil?
+        raise OAuth2Error::InvalidRequest, "Invalid refresh token" 
       end
 
       def validate_scope
