@@ -1,7 +1,6 @@
 require 'addressable/uri'
-require 'uri'
 
-module OAUTH2
+module OAuth2
   module Server
     class Request
 
