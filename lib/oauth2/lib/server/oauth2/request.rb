@@ -106,7 +106,7 @@ module OAuth2
       
     private
 
-      def build_response_uri(query_params={}, fragment_params=nil)
+      def build_response_uri(query_params=nil, fragment_params=nil)
         uri = Addressable::URI.parse redirect_uri
         uri.query_values = Addressable::URI.form_encode query_params unless query_params.nil?
         uri.fragment = Addressable::URI.form_encode fragment_params unless fragment_params.nil?
