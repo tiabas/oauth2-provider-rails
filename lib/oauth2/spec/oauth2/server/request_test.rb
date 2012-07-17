@@ -1,6 +1,7 @@
 require 'mocha'
 require 'minitest/unit'
 require 'json'
+
 class TestOAuth2Request < MiniTest::Unit::TestCase
   
   before(:all) do
@@ -22,7 +23,6 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   def test_authorization_code_grant_authorization_request
     c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
-                        :client_secret => @client_secret,
                         :response_type => 'code',
                         :redirect_uri => 'http://client.example.com/oauth_v2/cb',
                         :state => 'xyz'
@@ -34,7 +34,6 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   def test_authorization_code_grant_should_return_access_token
     c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
-                        :client_secret => @client_secret,
                         :grant_type => 'authorization_code',
                         :code => @code
                         })
@@ -44,7 +43,6 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   def test_implicit_grant_authorization_request_should_return_access_token
     c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
-                        :client_secret => @client_secret,
                         :response_type => 'token',
                         :redirect_uri => 'http://client.example.com/oauth_v2/cb',
                         :state => 'xyz',
@@ -57,7 +55,6 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   def test_resource_owner_credentials_should_return_access_token
     c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
-                        :client_secret => @client_secret,
                         :grant_type => 'password',
                         :username => 'johndoe',
                         :password => 'A3ddj3w'
@@ -79,7 +76,6 @@ class TestOAuth2Request < MiniTest::Unit::TestCase
   def test_refresh_token_request_should_return_access_token
     c = OAUTH2::Server::Request.new({
                         :client_id => @client_id,
-                        :client_secret => @client_secret,
                         :grant_type => 'refresh_token',
                         :refresh_token => @refresh_token
                         })
