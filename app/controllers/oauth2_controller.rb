@@ -6,28 +6,7 @@ class Oauth2Controller < ApplicationController
 
   # request authorization
   def authorize
-  # @params:
-  #  client_id     
-  #  client_secret
-  #  redirect_uri
-  #
-  #  Resource Owner Credentials   
-  #   grant_type => password
-  #   username
-  #   password
-  #
-  #  Client Credentials
-  #   grant_type => client_credentials  
-  #
-  #  
-  #
-  #
-  #
-  #
-  #
-  #
-  #
-  #
+  
   end
 
   def process_authorization

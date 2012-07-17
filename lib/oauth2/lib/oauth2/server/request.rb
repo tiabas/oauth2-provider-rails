@@ -105,7 +105,7 @@ module OAuth2
       end
       
     private
-
+      # convenience method to build response URI  
       def build_response_uri(query_params=nil, fragment_params=nil)
         uri = Addressable::URI.parse redirect_uri
         uri.query_values = Addressable::URI.form_encode query_params unless query_params.nil?
@@ -113,7 +113,7 @@ module OAuth2
         return uri
       end
 
-      def validate
+      def validate(&block)
         # check if we already ran validation
         return unless @validated.nil?
 
@@ -156,6 +156,8 @@ module OAuth2
           validate_refresh_token
         end
 
+        yield
+        
         # cache validation result
         @validated = true
       end
@@ -174,7 +176,7 @@ module OAuth2
         if @client_id.nil?
           raise OAuth2Error::InvalidRequest, "Missing parameters: client_id"
         end
-        @client_application = verify_client_id
+        @client_application = OauthClientApplication.verify_id client_id
         return @client_application unless @client_application.nil?
         raise OAuth2Error::InvalidClient
       end
@@ -186,10 +188,9 @@ module OAuth2
           @errors[:client] << "client_secret" if @client_secret.nil?
           raise OAuth2Error::InvalidRequest, "Missing parameters: #{@errors[:client].join(", ")}"
         end
-        authenticate_client @client_id, @client_secret
-      # rescue Exception => e
-      #   @errors[:client] = "Unauthorized Client"
-      #   raise OAuth2Error::UnauthorizedClient, @errors[:client] 
+        authenticated = OauthClientApplication.authenticate @client_id, @client_secret
+        @errors[:client] = "Unauthorized Client"
+        raise OAuth2Error::UnauthorizedClient, @errors[:client] 
       end
 
       def validate_user_credentials
@@ -199,10 +200,10 @@ module OAuth2
           @errors[:user_credentials] << "password" if @password.nil?
           raise OAuth2Error::InvalidRequest, "Missing parameters: #{@errors[:user_credentials].join(", ")}"
         end
-        user = authenticate_user @username, @password
+        user = User.authenticate username, password
         return user unless user.nil?
         @errors[:credentials] = "Invalid username and/or password"
-        raise OAuth2Error::AccessDenied
+        raise OAuth2Error::AccessDenied, @errors[:credentials]
       end
 
       def validate_response_type
@@ -255,25 +256,6 @@ module OAuth2
           raise OAuth2Error::InvalidRequest, "Redirect URI does not match the one on record"
         end
         @redirect_uri 
-      end
-
-      def verify_client_id
-        raise "FIX ME!!!!!"
-      end
-
-      def authenticate_client(client_id, client_secret)
-      #   Oauth2ClientApplication.where(
-      #     :client_id     => @client_id,
-      #     :client_secret => @client_secret
-      #   ).first!
-      # rescue ActiveRecord::RecordNotFound
-      #   @errors[:client] = "Unauthorized Client"
-      #   raise OAuth2Error::UnauthorizedClient, @errors[:client] 
-        raise "FIX ME!!!!!"
-      end
-
-      def authenticate_user(username, password)
-        raise "FIX ME!!!!!"
       end
 
       def verify_authorization_code
