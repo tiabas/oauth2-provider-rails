@@ -41,3 +41,5 @@ gem 'jquery-rails'
 gem 'railties'
 
 gem 'addressable'
+
+gem 'oauth2', '0.1.1', :path => '~/Sites/oauth2-ruby' 

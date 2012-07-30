@@ -1,41 +1,56 @@
 class OauthClientApplication < ActiveRecord::Base
-  attr_accessible :name, :website, :description, :client_type
-
+  include OAuth2::Helper
+  
   CLIENT_TYPES = %w{ native web user-agent }
 
-  validates :name, :website, :redirect_uri, :description, :client_type, :presence => true
-  validates :client_id, :uniqueness =>  { :case_sensitive => false }
-  validates :client_secret, :uniqueness => true
-  validates :client_type, :inclusion => { :in => CLIENT_TYPES }
-  validates :terms_of_service, :acceptance => true, :on => :create_client_id
+  attr_accessible :name, :website, :description, :client_type, :redirect_uri
 
-  before_save :create_client_id,     :on => :create
-  before_save :create_client_secret, :on => :create 
+  
+  validates :name, :website, :redirect_uri, :description, :client_id,
+            :client_secret, :client_type,
+            :presence => true
 
-  private
+  validates :client_id,
+            :uniqueness =>  { :case_sensitive => false }
 
-    def verify_code
-      self.code_created_at < 10.minutes.ago
-    end
+  validates :client_secret,
+            :uniqueness => true
 
-    def generate_code
-      self.code = generate_base_64_string
-      self.code_created_at = Time.now
-      self.save
-    end
+  validates :client_type,
+            :inclusion => { :in => CLIENT_TYPES }
 
-    def create_client_id
-      generate_base_64_string
-    end
+  # validates :terms_of_service,
+  #           :acceptance => true,
+  #           :on => :create_client_id
 
-    def create_client_secret
-      require 'digest/sha2'
-      Digest::SHA2.new.to_s
-    end
+  has_many  :oauth_access_token
+  has_many  :oauth_authorization_code
 
-    def generate_base_64_string
-      require 'base64'
-      Base64.urlsafe_encode64 "#{Time.now.utc}"
-    end
+  before_validation :generate_credentials, :on => :create
+  def self.find_client_with_id(c_id)
+    self.find_by_client_id c_id
+  end
 
+  def reset_client_secret!
+    self.update_attribute(:client_secret, generate_client_secret)
+  end
+
+private
+
+  def generate_credentials
+    self.client_id ||= generate_client_secret
+    self.client_secret ||= generate_client_secret
+  end
+
+  def generate_client_id
+    generate_urlsafe_key(24)
+  end
+
+  def generate_client_secret
+    generate_urlsafe_key(32)
+  end
+
+  def verify_secret(secret)
+    self.client_secret == secret
+  end
 end

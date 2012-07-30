@@ -1,33 +1,28 @@
 class Oauth2Controller < ApplicationController
 
-  before_filter :create_oauth2_client_request
-  before_filter :verify_oauth2_client_id
-  before_filter :verify_oauth2_response_type, :only => :authorize
+  # before_filter :create_oauth_client_request, :only => [:authorize, :token]
 
   # request authorization
   def authorize
   # @params:
   #  client_id     
-  #  client_secret
-  #  redirect_uri
   #
-  #  Resource Owner Credentials   
-  #   grant_type => password
-  #   username
-  #   password
+  # Authorization code
+  #   response_type, redirect_uri
+  # 
+  # Resource Owner Credentials   
+  #   grant_type, username, password
   #
-  #  Client Credentials
-  #   grant_type => client_credentials  
-  #
-  #  
-  #
-  #
-  #
-  #
-  #
-  #
-  #
-  #
+  # Client Credentials
+  #   grant_type, client_secret
+    request = OAuth2::Server::Request.new params.symbolize_keys
+    handler = OAuth2::Server::RequestHandler.new(request, {
+              :user_datastore => User,
+              :client_datastore => OauthClientApplication,
+              :token_datastore => OauthAccessToken,
+              :code_datastore => OauthAuthorizationCode
+              })
+    redirect_to handler.authorization_redirect_uri, :status => :found
   end
 
   def process_authorization
@@ -40,27 +35,21 @@ class Oauth2Controller < ApplicationController
   # @params:
   #  client_id     
   #  client_secret
-  #
-  #  Resource Owner Credentials   
-  #   grant_type => password
-  #   username
-  #   password
-  #
-  #  Client Credentials
-  #   grant_type => client_credentials  
-  #
-  #  Implicit Grant  
-  #   no grant type
-  #
-  #  Authorization Grant
-  #   grant_type => client_credentials  
-  #
-  #  Refresh token
-  #   grant_type => refresh_token
-  #
+  user = User.first
+  request = OAuth2::Server::Request.new params.symbolize_keys
+  handler = OAuth2::Server::RequestHandler.new(request, {
+            :user_datastore => User,
+            :client_datastore => OauthClientApplication,
+            :token_datastore => OauthAccessToken,
+            :code_datastore => OauthAuthorizationCode
+            })
+  return render :json => handler.fetch_access_token(user).to_hsh, :status => :ok
   end
 
   def register
+  end
+
+  def process_registration
 
   end
 
