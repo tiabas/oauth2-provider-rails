@@ -23,6 +23,11 @@ class Oauth2Controller < ApplicationController
               :code_datastore => OauthAuthorizationCode
               })
     redirect_to handler.authorization_redirect_uri, :status => :found
+  rescue Exception => e
+    unless e.is_a?(OAuth2::OAuth2Error::Error)
+      raise e
+    end
+    return redirect_to handler.error_response(e), :status => :bad_request
   end
 
   def process_authorization
@@ -32,18 +37,23 @@ class Oauth2Controller < ApplicationController
 
   # access_token, refresh_token
   def token
-  # @params:
-  #  client_id     
-  #  client_secret
-  user = User.first
-  request = OAuth2::Server::Request.new params.symbolize_keys
-  handler = OAuth2::Server::RequestHandler.new(request, {
-            :user_datastore => User,
-            :client_datastore => OauthClientApplication,
-            :token_datastore => OauthAccessToken,
-            :code_datastore => OauthAuthorizationCode
-            })
-  return render :json => handler.fetch_access_token(user).to_hsh, :status => :ok
+    # @params:
+    #  client_id     
+    #  client_secret
+    user = User.first
+    request = OAuth2::Server::Request.new params.symbolize_keys
+    handler = OAuth2::Server::RequestHandler.new(request, {
+              :user_datastore => User,
+              :client_datastore => OauthClientApplication,
+              :token_datastore => OauthAccessToken,
+              :code_datastore => OauthAuthorizationCode
+              })
+    render :json => handler.fetch_access_token(user).to_hsh, :status => :ok
+  rescue Exception => e
+    unless e.is_a?(OAuth2::OAuth2Error::Error)
+      raise e
+    end
+    return redirect_to handler.error_response(e), :status => :bad_request
   end
 
   def register
