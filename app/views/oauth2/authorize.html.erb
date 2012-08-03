@@ -1,2 +1,22 @@
-<h1>Oauth2#authorize</h1>
-<p>Find me in app/views/oauth2/authorize.html.erb</p>
+<%= form_for(@oa2_pending_request, :url => oauth2_process_authorization_path(@oa2_pending_request), :method => :post) do |request_form|-%>
+  <section>
+    <header><h1>Connect with Yammer</h1></header>
+    <div>
+      <p></p>
+      <div>
+      <% unless @oa2_pending_request.scope_values.empty? %>
+        <ul>
+          <% @oa2_pending_request.scope_values.each do |scope| %>
+            <li><%= scope %></li>
+          <% end %>
+        </ul>
+      <% end %>
+      </div>
+      <div> 
+        <%= submit_tag :allow %>
+        <%= submit_tag :deny %>
+      </div>
+      <p> 
+    </div>
+  </div>
+<% end -%>

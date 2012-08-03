@@ -4,24 +4,43 @@ class Oauth2Controller < ApplicationController
 
   # request authorization
   def authorize
-  # @params:
-  #  client_id     
-  #
-  # Authorization code
-  #   response_type, redirect_uri
-  # 
-  # Resource Owner Credentials   
-  #   grant_type, username, password
-  #
-  # Client Credentials
-  #   grant_type, client_secret
-    request = OAuth2::Server::Request.new params.symbolize_keys
-    handler = OAuth2::Server::RequestHandler.new(request, {
+    @oa2_request = OAuth2::Server::Request.new params.symbolize_keys
+    @oa2_request.validate
+
+    @oa2_pending_request = Oauth2PendingRequest.create! @oa2_request.to_hsh
+
+  rescue Exception => e
+    unless e.is_a?(OAuth2::OAuth2Error::Error)
+      raise e
+    end
+    return redirect_to e.http_error_response(@oa2_request), :status => :bad_request
+  end
+
+  def process_authorization
+    authorize = params.fetch(:commit, false)
+    if authorize == 'deny'
+      return redirect_to handler.error_response(OAuth2::OAuth2Error::AccessDenied.new), :status => :bad_request
+    end
+    
+    pending_request = Oauth2PendingRequest.find_by_id params[:id]
+    unless pending_request
+      return render :nothing => true, :status => :bad_request
+    end
+
+    #! possible bug may result here with the attributes call
+    pending_request.attributes = params[:pending_request]
+    unless pending_request.valid?
+      return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
+    end
+
+    oa_request = OAuth2::Server::Request.new pending_request.attributes.symbolize_keys
+    handler = OAuth2::Server::RequestHandler.new(oa_request, {
               :user_datastore => User,
               :client_datastore => OauthClientApplication,
               :token_datastore => OauthAccessToken,
               :code_datastore => OauthAuthorizationCode
               })
+
     redirect_to handler.authorization_redirect_uri, :status => :found
   rescue Exception => e
     unless e.is_a?(OAuth2::OAuth2Error::Error)
@@ -30,19 +49,14 @@ class Oauth2Controller < ApplicationController
     return redirect_to handler.error_response(e), :status => :bad_request
   end
 
-  def process_authorization
-    allow = params.fetch('allow', false) && true
-    redirect_to @oauth2_client_request.authorization_redirect_uri(allow), :status => :found
-  end
-
   # access_token, refresh_token
   def token
     # @params:
     #  client_id     
     #  client_secret
     user = User.first
-    request = OAuth2::Server::Request.new params.symbolize_keys
-    handler = OAuth2::Server::RequestHandler.new(request, {
+    oa2_request = OAuth2::Server::Request.new params.symbolize_keys
+    handler = OAuth2::Server::RequestHandler.new(oa2_request, {
               :user_datastore => User,
               :client_datastore => OauthClientApplication,
               :token_datastore => OauthAccessToken,

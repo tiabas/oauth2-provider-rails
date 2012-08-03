@@ -5,7 +5,7 @@ class OauthAccessToken < ActiveRecord::Base
 
   CLIENT_SCOPES = %w{ scope1 scope2 scope3 }
 
-  validates_presence_of :token, :token_type, :expires_in, :refresh_token, :access_type
+  validates_presence_of :token, :token_type, :expires_in, :refresh_token #, :access_type
   
   validates_uniqueness_of :refresh_token, :scope => [:client_id]
 
@@ -15,25 +15,30 @@ class OauthAccessToken < ActiveRecord::Base
   belongs_to :oauth_client_application, :foreign_key => "client_id"
 
 
-  def self.refresh(cid, ref_token)
+  def self.refresh(client, ref_token)
     token = find_by(
-                :client_id => cid,
+                :client_id => client.id,
                 :refresh_token => ref_token
                 )
     token.refresh! unless token.nil?
     token
   end
 
-  def self.generate_user_token(client, user, scope="", expires_in=3600, token_type='bearer')
-    token = create(
+  def self.generate_user_token(client, user, opts={})
+    scope = opts[:scope] || 'default'
+    expires_in = opts[:expires_in] || 3600
+    token_type = opts[:token_type] || 'Bearer'
+    refreshable = opts[:refreshable] || true
+    refresh_token = refreshable ? generate_urlsafe_key : nil
+    token = create!(
               :client_id => client.id,
               :user_id => user.id,
               :token => generate_urlsafe_key,
               :token_type => token_type,
-              :refresh_token => generate_urlsafe_key,
+              :refresh_token => refresh_token,
               :scope => scope,
               :expires_in => expires_in
-              )
+            )
     token
   end
 
