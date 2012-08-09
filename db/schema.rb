@@ -13,19 +13,6 @@
 
 ActiveRecord::Schema.define(:version => 20120802190541) do
 
-  create_table "oauth2_pending_requests", :force => true do |t|
-    t.string   "user_id"
-    t.string   "client_id"
-    t.string   "client_secret"
-    t.string   "redirect_uri"
-    t.string   "response_type"
-    t.string   "state"
-    t.string   "scope"
-    t.boolean  "approved",      :default => false
-    t.datetime "created_at",                       :null => false
-    t.datetime "updated_at",                       :null => false
-  end
-
   create_table "oauth_access_tokens", :force => true do |t|
     t.integer  "user_id"
     t.integer  "client_id"
@@ -59,6 +46,19 @@ ActiveRecord::Schema.define(:version => 20120802190541) do
     t.string   "redirect_uri"
     t.datetime "created_at",    :null => false
     t.datetime "updated_at",    :null => false
+  end
+
+  create_table "oauth_pending_requests", :force => true do |t|
+    t.string   "user_id"
+    t.string   "client_id"
+    t.string   "client_secret"
+    t.string   "redirect_uri"
+    t.string   "response_type"
+    t.string   "state"
+    t.string   "scope"
+    t.boolean  "approved",      :default => false
+    t.datetime "created_at",                       :null => false
+    t.datetime "updated_at",                       :null => false
   end
 
   create_table "users", :force => true do |t|

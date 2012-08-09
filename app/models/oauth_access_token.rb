@@ -14,6 +14,9 @@ class OauthAccessToken < ActiveRecord::Base
   
   belongs_to :oauth_client_application, :foreign_key => "client_id"
 
+  has_one :oauth_token_scope
+
+  before_create :build_token_scope
 
   def self.refresh(client, ref_token)
     token = find_by(
@@ -78,4 +81,10 @@ class OauthAccessToken < ActiveRecord::Base
       :refresh_token => refresh_token
     }
   end
+
+  private
+
+    def build_token_scope
+
+    end
 end

@@ -13,13 +13,13 @@ class Oauth2Controller < ApplicationController
     unless e.is_a?(OAuth2::OAuth2Error::Error)
       raise e
     end
-    return redirect_to e.http_error_response(@oa2_request), :status => :bad_request
+    return redirect_to e.redirect_uri(@oa2_request), :status => :bad_request
   end
 
   def process_authorization
     authorize = params.fetch(:commit, false)
     if authorize == 'deny'
-      return redirect_to handler.error_response(OAuth2::OAuth2Error::AccessDenied.new), :status => :bad_request
+      return redirect_to OAuth2::OAuth2Error::AccessDenied.new.redirect_uri, :status => :bad_request
     end
     
     pending_request = Oauth2PendingRequest.find_by_id params[:id]
@@ -28,7 +28,7 @@ class Oauth2Controller < ApplicationController
     end
 
     #! possible bug may result here with the attributes call
-    pending_request.attributes = params[:pending_request]
+    pending_request.scope = params[:pending_request][:scope]
     unless pending_request.valid?
       return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
     end
@@ -46,7 +46,7 @@ class Oauth2Controller < ApplicationController
     unless e.is_a?(OAuth2::OAuth2Error::Error)
       raise e
     end
-    return redirect_to handler.error_response(e), :status => :bad_request
+    return redirect_to e.redirect_uri(oa_request), :status => :bad_request
   end
 
   # access_token, refresh_token
@@ -55,7 +55,7 @@ class Oauth2Controller < ApplicationController
     #  client_id     
     #  client_secret
     user = User.first
-    oa2_request = OAuth2::Server::Request.new params.symbolize_keys
+    oa_request = OAuth2::Server::Request.new params.symbolize_keys
     handler = OAuth2::Server::RequestHandler.new(oa2_request, {
               :user_datastore => User,
               :client_datastore => OauthClientApplication,
@@ -67,10 +67,11 @@ class Oauth2Controller < ApplicationController
     unless e.is_a?(OAuth2::OAuth2Error::Error)
       raise e
     end
-    return redirect_to handler.error_response(e), :status => :bad_request
+    return redirect_to e.redirect_uri(oa_request), :status => :bad_request
   end
 
   def register
+
   end
 
   def process_registration

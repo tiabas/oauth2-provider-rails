@@ -1,6 +1,6 @@
-class CreateOauth2PendingRequests < ActiveRecord::Migration
+class CreateOauthPendingRequests < ActiveRecord::Migration
   def change
-    create_table :oauth2_pending_requests do |t|
+    create_table :oauth_pending_requests do |t|
       t.string  :user_id
       t.string  :client_id
       t.string  :client_secret
