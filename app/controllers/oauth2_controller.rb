@@ -5,10 +5,8 @@ class Oauth2Controller < ApplicationController
   # request authorization
   def authorize
     @oa2_request = OAuth2::Server::Request.new params.symbolize_keys
-    @oa2_request.validate
-
+    @oa2_request.validate!
     @oa2_pending_request = Oauth2PendingRequest.create! @oa2_request.to_hsh
-
   rescue Exception => e
     unless e.is_a?(OAuth2::OAuth2Error::Error)
       raise e
@@ -40,6 +38,15 @@ class Oauth2Controller < ApplicationController
               :token_datastore => OauthAccessToken,
               :code_datastore => OauthAuthorizationCode
               })
+
+    if oa_request.response_type? :token
+      if params[:dialog] == 'true'
+        @token = handler.fetch_access_token(current_user).to_hsh
+        @redirect_to = oa_request.redirect_uri
+        return render 'oauth2/dialog'
+      end
+      return handler.access_token_response(current_user).to_hsh, :status => :ok
+    end
 
     redirect_to handler.authorization_redirect_uri, :status => :found
   rescue Exception => e
