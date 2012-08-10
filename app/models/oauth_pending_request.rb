@@ -1,4 +1,4 @@
-class Oauth2PendingRequest < ActiveRecord::Base
+class OauthPendingRequest < ActiveRecord::Base
   attr_accessible :client_id, :client_secret, :redirect_uri, :response_type, :scope, :state
 
   validate :requested_scope_must_include_approved_scope, :on => :update

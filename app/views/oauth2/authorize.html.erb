@@ -1,12 +1,12 @@
-<%= form_for(@oa2_pending_request, :url => oauth2_process_authorization_path(@oa2_pending_request), :method => :post) do |request_form|-%>
+<%= form_for(@oa_pending_request, :url => oauth2_process_authorization_path(:id => @oa_pending_request.id), :method => :post) do |request_form|-%>
   <section>
     <header><h1>Connect with Yammer</h1></header>
     <div>
       <p></p>
       <div>
-      <% unless @oa2_pending_request.scope_values.empty? %>
+      <% unless @oa_pending_request.scope_values.empty? %>
         <ul>
-          <% @oa2_pending_request.scope_values.each do |scope| %>
+          <% @oa_pending_request.scope_values.each do |scope| %>
             <li><%= scope %></li>
           <% end %>
         </ul>

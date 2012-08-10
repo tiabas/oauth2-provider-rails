@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120802190541) do
+ActiveRecord::Schema.define(:version => 20120808054440) do
 
   create_table "oauth_access_tokens", :force => true do |t|
     t.integer  "user_id"
@@ -59,6 +59,20 @@ ActiveRecord::Schema.define(:version => 20120802190541) do
     t.boolean  "approved",      :default => false
     t.datetime "created_at",                       :null => false
     t.datetime "updated_at",                       :null => false
+  end
+
+  create_table "oauth_token_scopes", :force => true do |t|
+    t.boolean  "user_profile"
+    t.boolean  "user_files"
+    t.boolean  "user_messages"
+    t.boolean  "user_pages"
+    t.boolean  "user_groups"
+    t.boolean  "user_networks"
+    t.boolean  "user_invitations"
+    t.boolean  "user_presences"
+    t.boolean  "read_follower_lists"
+    t.datetime "created_at",          :null => false
+    t.datetime "updated_at",          :null => false
   end
 
   create_table "users", :force => true do |t|
