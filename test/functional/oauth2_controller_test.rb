@@ -88,7 +88,7 @@ class Oauth2ControllerTest < ActionController::TestCase
   end
 
   test "should succeed if response type code and client id valid" do
-    OAuth2::Server::RequestHandler.any_instance.stubs(:validate_client_id).returns(true)
+    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(true)
     request_params = { 
                       :client_id => "s6BhdRkqt3",
                       :response_type => "code",
@@ -101,7 +101,7 @@ class Oauth2ControllerTest < ActionController::TestCase
   end
 
   test "should succeed if response type token and client id valid" do
-    OAuth2::Server::RequestHandler.any_instance.stubs(:validate_client_id).returns(true)
+    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(true)
     request_params = { 
                       :client_id => "s6BhdRkqt3",
                       :response_type => "token",

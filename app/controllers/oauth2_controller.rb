@@ -11,7 +11,7 @@ class Oauth2Controller < ApplicationController
           :token_datastore => OauthAccessToken,
           :code_datastore => OauthAuthorizationCode
           })
-    handler.validate_client_id
+    handler.verify_client_id
     @oa_pending_request = OauthPendingRequest.create! @oa_request.to_hsh
   rescue Exception => e
     if e.is_a?(OAuth2::OAuth2Error::Error)
