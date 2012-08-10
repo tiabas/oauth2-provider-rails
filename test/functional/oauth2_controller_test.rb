@@ -112,4 +112,37 @@ class Oauth2ControllerTest < ActionController::TestCase
     end
     assert_response :success
   end
+
+  test "should redirect with error message if user denies request " do
+    @pending_request = OauthPendingRequest.new(
+
+                      )
+    request_params = { 
+                      :id => "s6BhdRkqt3",
+                      :commit => "deny"
+                     }
+    get :authorize, request_params
+  end
+
+  test "should if response type is code redirect with code if user approves request" do
+    @pending_request = OauthPendingRequest.new(
+
+                      )
+    request_params = { 
+                      :id => "s6BhdRkqt3",
+                      :commit => "allow"
+                     }
+    get :authorize, request_params
+  end
+
+  test "should if response type is token redirect with token if user approves request" do
+    @pending_request = OauthPendingRequest.new(
+
+                  )
+    request_params = { 
+                      :id => "s6BhdRkqt3",
+                      :commit => "allow"
+                     }
+    get :authorize, request_params
+  end
 end
