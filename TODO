@@ -1,0 +1,7 @@
+08/11/2012
+- Improve config class
+- Add ability to set token scope
+- Add access type to token i.e online, offline
+- Stream line refreshing of tokens
+- Write unit tests for models
+- Write documentation

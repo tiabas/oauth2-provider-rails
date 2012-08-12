@@ -15,27 +15,27 @@ class Oauth2Controller < ApplicationController
     @oa_pending_request = OauthPendingRequest.create! @oa_request.to_hsh
   rescue Exception => e
     if e.is_a?(OAuth2::OAuth2Error::Error)
-      if @oa_request.redirect_uri_valid?
-        return redirect_to e.redirect_uri(@oa_request)
+      unless @oa_request.redirect_uri_valid?
+        return render :text => "The client provided invalid uri"
       end
-      return render :text => e.to_txt, :status => :bad_request
+      return redirect_to e.redirect_uri(@oa_request)
     end
     raise
   end
 
-  def process_authorization
-    authorize = params.fetch(:commit, false)
-    if authorize == 'deny'
-      return redirect_to OAuth2::OAuth2Error::AccessDenied.new.redirect_uri, :status => :bad_request
-    end
-    
+  def process_authorization    
     pending_request = OauthPendingRequest.find_by_id params[:id]
     unless pending_request
       return render :nothing => true, :status => :bad_request
     end
 
+    decision = params.fetch(:commit, false)
+    if decision == 'deny'
+      err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
+      return redirect_to err.redirect_uri(pending_request)
+    end
     #! possible bug may result here with the attributes call
-    pending_request.scope = params[:pending_request][:scope]
+    # pending_request.scope = params[:pending_request][:scope]
     unless pending_request.valid?
       return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
     end
@@ -48,21 +48,14 @@ class Oauth2Controller < ApplicationController
               :code_datastore => OauthAuthorizationCode
               })
 
-    if oa_request.response_type? :token
-      if params[:dialog] == 'true'
-        @token = handler.fetch_access_token(current_user).to_hsh
-        @redirect_to = oa_request.redirect_uri
-        return render 'oauth2/dialog'
-      end
-      return handler.access_token_response(current_user).to_hsh, :status => :ok
-    end
+    return redirect_to handler.access_token_redirect_uri(current_user) if oa_request.response_type? :token
 
-    redirect_to handler.authorization_redirect_uri, :status => :found
+    return redirect_to handler.authorization_redirect_uri
   rescue Exception => e
     unless e.is_a?(OAuth2::OAuth2Error::Error)
       raise e
     end
-    return redirect_to e.redirect_uri(oa_request), :status => :bad_request
+    return redirect_to e.redirect_uri(oa_request)
   end
 
   # access_token, refresh_token
@@ -78,13 +71,13 @@ class Oauth2Controller < ApplicationController
               :token_datastore => OauthAccessToken,
               :code_datastore => OauthAuthorizationCode
               })
-    render :json => handler.access_token_response(user).to_hsh, :status => :ok
+    return render :json => handler.access_token_response(current_user)
   rescue Exception => e
     unless e.is_a?(OAuth2::OAuth2Error::Error)
       raise e
     end
     if oa_request.redirect_uri_valid?
-      return redirect_to e.redirect_uri(oa_request), :status => :bad_request
+      return redirect_to e.redirect_uri(oa_request)
     end
     render :text => e.to_txt, :status => :bad_request
   end
@@ -95,6 +88,5 @@ class Oauth2Controller < ApplicationController
 
   def process_registration
 
-  end
-
+  end  
 end

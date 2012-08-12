@@ -28,11 +28,11 @@ ActiveRecord::Schema.define(:version => 20120808054440) do
   end
 
   create_table "oauth_authorization_codes", :force => true do |t|
-    t.integer  "client_id"
+    t.integer  "client_application_id"
     t.string   "code"
     t.string   "redirect_uri"
-    t.datetime "created_at",   :null => false
-    t.datetime "updated_at",   :null => false
+    t.datetime "created_at",            :null => false
+    t.datetime "updated_at",            :null => false
   end
 
   create_table "oauth_client_applications", :force => true do |t|
@@ -79,8 +79,9 @@ ActiveRecord::Schema.define(:version => 20120808054440) do
     t.string   "first_name"
     t.string   "last_name"
     t.string   "email"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.string   "password_digest"
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
   end
 
 end

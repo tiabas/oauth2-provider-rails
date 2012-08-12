@@ -3,7 +3,7 @@ class OauthClientApplication < ActiveRecord::Base
   
   CLIENT_TYPES = %w{ native web user-agent }
 
-  attr_accessible :name, :website, :description, :client_type, :redirect_uri
+  attr_accessible :name, :website, :description, :client_type, :redirect_uri, :terms_of_service
 
   
   validates :name, :website, :redirect_uri, :description, :client_id,
@@ -21,7 +21,7 @@ class OauthClientApplication < ActiveRecord::Base
 
   # validates :terms_of_service,
   #           :acceptance => true,
-  #           :on => :create_client_id
+  #           :on => :create
 
   has_many  :oauth_access_token
   has_many  :oauth_authorization_code
@@ -31,8 +31,16 @@ class OauthClientApplication < ActiveRecord::Base
     self.find_by_client_id c_id
   end
 
+  def self.authenticate(client_id, client_secret)
+    find_by_client_id(client_id).try(:authenticate, client_secret)
+  end
+
   def reset_client_secret!
     self.update_attribute(:client_secret, generate_client_secret)
+  end
+
+  def authenticate(secret)
+    self.client_secret == secret
   end
 
 private
@@ -48,9 +56,5 @@ private
 
   def generate_client_secret
     generate_urlsafe_key(32)
-  end
-
-  def verify_secret(secret)
-    self.client_secret == secret
   end
 end

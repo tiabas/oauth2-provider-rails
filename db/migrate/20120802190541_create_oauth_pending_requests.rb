@@ -6,6 +6,7 @@ class CreateOauthPendingRequests < ActiveRecord::Migration
       t.string  :client_secret
       t.string  :redirect_uri
       t.string  :response_type
+      # t.string  :grant_type
       t.string  :state
       t.string  :scope
       t.boolean :approved, :default => false

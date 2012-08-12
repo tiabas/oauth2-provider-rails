@@ -5,7 +5,7 @@ class OauthAccessToken < ActiveRecord::Base
 
   CLIENT_SCOPES = %w{ scope1 scope2 scope3 }
 
-  validates_presence_of :token, :token_type, :expires_in, :refresh_token #, :access_type
+  validates_presence_of :token, :token_type, :expires_in, :refresh_token #, :access_type, :scope
   
   validates_uniqueness_of :refresh_token, :scope => [:client_id]
 
@@ -18,16 +18,16 @@ class OauthAccessToken < ActiveRecord::Base
 
   before_create :build_token_scope
 
-  def self.refresh(client, ref_token)
-    token = find_by(
+  def self.generate_from_refresh_token(client, ref_token, opts={})
+    token = where(
                 :client_id => client.id,
                 :refresh_token => ref_token
-                )
-    token.refresh! unless token.nil?
+              ).first
+    token.refresh! if token
     token
   end
 
-  def self.generate_user_token(client, user, opts={})
+  def self.generate_token(client, user=nil, opts={})
     scope = opts[:scope] || 'default'
     expires_in = opts[:expires_in] || 3600
     token_type = opts[:token_type] || 'Bearer'
@@ -35,7 +35,7 @@ class OauthAccessToken < ActiveRecord::Base
     refresh_token = refreshable ? generate_urlsafe_key : nil
     token = create!(
               :client_id => client.id,
-              :user_id => user.id,
+              :user_id => user.try(:id),
               :token => generate_urlsafe_key,
               :token_type => token_type,
               :refresh_token => refresh_token,
@@ -62,7 +62,7 @@ class OauthAccessToken < ActiveRecord::Base
   end 
 
   def refresh!
-    update_attribute :token, generate_urlsafe_key
+    update_attribute :access_token, generate_urlsafe_key
   end
 
   # def validate_scope
@@ -73,9 +73,9 @@ class OauthAccessToken < ActiveRecord::Base
   #   @errors[:scope] = scope_errors.join(", ") if scope_errors.any?
   # end
 
-  def to_hsh
+  def to_oauth_response
     {
-      :token => token,
+      :access_token => token,
       :token_type => token_type,
       :expires_in => expires_in,
       :refresh_token => refresh_token
