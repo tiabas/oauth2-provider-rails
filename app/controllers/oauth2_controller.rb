@@ -18,8 +18,8 @@ class Oauth2Controller < ApplicationController
         return render :nothing => true, :status => :bad_request
       end
 
-      decision = params.fetch(:commit, false)
-      if decision == 'deny'
+      decision = params.fetch(:decision, false)
+      unless decision == 'allow'
         err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
         return redirect_to err.redirect_uri(pending_request)
       end
@@ -67,7 +67,6 @@ private
         return redirect_to e.redirect_uri(@oa_request)
       end
       return render :text => "the client provided an invalid redirect URI"
-      # raise "no redirect uri"
     end
     raise e
   end
