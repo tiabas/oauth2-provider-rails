@@ -123,7 +123,7 @@ DEPENDENCIES
   jquery-rails
   json
   mocha (>= 0.12.1)
-  oauth2 (= 0.1.4)!
+  oauth2 (>= 0.1.4)!
   pg (~> 0.14.0)
   rails (= 3.2.6)
   railties
