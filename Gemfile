@@ -42,4 +42,4 @@ gem 'addressable'
 
 gem 'mocha', ">=0.12.1"
 
-gem 'oauth2', '0.1.3', :path => '~/Sites/oauth2-ruby' 
+gem 'oauth2', ">=0.1.4", :path => '~/Sites/oauth2-ruby' 
