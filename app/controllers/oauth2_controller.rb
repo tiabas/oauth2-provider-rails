@@ -1,6 +1,7 @@
 class Oauth2Controller < ApplicationController
 
-  # request authorization
+  # Authorization Endpoint
+  # This is the endpoint that would be used for the Implicit grant flow
   def authorize
     handle_oauth_exception do
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
@@ -10,7 +11,7 @@ class Oauth2Controller < ApplicationController
     end
   end
 
-  #
+  # 
   def process_authorization
     handle_oauth_exception do   
       pending_request = OauthPendingRequest.find_by_id params[:id]
