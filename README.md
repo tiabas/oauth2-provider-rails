@@ -1,6 +1,9 @@
 # OAuth2 Server Side Demo 
-This is a demo rails application that shows how to use the oauth2-ruby gem to create an oauth2 implementation on the server side.
+This is a demo rails application that shows how to use the oauth2-ruby gem to create an oauth2 implementation on the server side. It
+requires that you have the oauth2-ruby gem installed. 
+* [oauth2-ruby source on Github][code]
 
+[code]: https://github.com/tiabas/oauth2-ruby
 
 ## Implicit Grant Flow
 
@@ -46,17 +49,21 @@ The action will render a form requesting the user to either allow or deny the re
     <% end -%>
 
 
-When the user submits the rendenred form, the data is posted to the 'process_authorization' action of the oauth controller
+When the user submits the form, the data is posted to the 'process_authorization' action of the oauth controller. If the user denies the request, the 
+user-agent is redirected to the callback URL with the error code and error description as parameters. Otherwise, the request parameters are loaded from
+the pending request that was created in the pre-authorization step and used to create a new request handler. Assuming all goes well, if the response type
+was 'token' the access token can be retrieved from the request handler and returned either in the URL query component or the body of the response. If the
+response type was 'code', the authorization code is returned in the query component of the authorization redirect URI.
 
-   def process_authorization
+    def process_authorization
       handle_oauth_exception do
 
         decision = params.fetch(:decision, false)
         unless decision == 'allow'
           err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
           return redirect_to err.redirect_uri(pending_request)
-        end 
-        
+        end
+
         pending_request = OauthPendingRequest.find_by_id params[:id]
         unless pending_request
           return render :nothing => true, :status => :bad_request
@@ -78,9 +85,11 @@ When the user submits the rendenred form, the data is posted to the 'process_aut
       end
     end
 
+## Authorization Code
 
-## Resources
-* [View oauth2-ruby source on Github][code]
+## Client Credentials
 
-[code]: https://github.com/tiabas/oauth2-ruby
+## Password
+
+## Refresh Token
 
