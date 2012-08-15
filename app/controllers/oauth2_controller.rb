@@ -13,16 +13,16 @@ class Oauth2Controller < ApplicationController
 
   # 
   def process_authorization
-    handle_oauth_exception do   
-      pending_request = OauthPendingRequest.find_by_id params[:id]
-      unless pending_request
-        return render :nothing => true, :status => :bad_request
-      end
-
+    handle_oauth_exception do
       decision = params.fetch(:decision, false)
       unless decision == 'allow'
         err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
         return redirect_to err.redirect_uri(pending_request)
+      end
+
+      pending_request = OauthPendingRequest.find_by_id params[:id]
+      unless pending_request
+        return render :nothing => true, :status => :bad_request
       end
       #!!possible bug may result here with the attributes call considering that scope
       #  should be space delimited strings

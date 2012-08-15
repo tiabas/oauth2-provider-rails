@@ -1,22 +1,8 @@
 <%= form_for(@oa_pending_request, :url => oauth2_process_authorization_path(:id => @oa_pending_request.id), :method => :post) do |request_form|-%>
   <section>
-    <header><h1>Connect with Yammer</h1></header>
-    <div>
-      <p></p>
-      <div>
-      <% unless @oa_pending_request.scope_values.empty? %>
-        <ul>
-          <% @oa_pending_request.scope_values.each do |scope| %>
-            <li><%= scope %></li>
-          <% end %>
-        </ul>
-      <% end %>
-      </div>
-      <div> 
-        <%= submit_tag :allow, :name => 'decision' %>
-        <%= submit_tag :deny, :name => 'decision' %>
-      </div>
-      <p> 
-    </div>
-  </div>
+    <header><h1>Example app</h1></header>
+    <div> The application "Example Client" would like to access your profile. Would you like to give "Example Client" access?
+    <%= submit_tag :allow, :name => 'decision' %>
+    <%= submit_tag :deny, :name => 'decision' %>
+  </section>
 <% end -%>
