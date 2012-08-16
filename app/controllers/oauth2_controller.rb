@@ -6,28 +6,28 @@ class Oauth2Controller < ApplicationController
     handle_oauth_exception do
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
       handler = OAuth2::Server::RequestHandler.new(@oa_request)
-      handler.verify_client_id
+      handler.validate!
       @oa_pending_request = OauthPendingRequest.create!(@oa_request.to_hsh)
     end
   end
 
   # 
   def process_authorization
-    handle_oauth_exception do
-      decision = params.fetch(:decision, false)
-      unless decision == 'allow'
-        err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
-        return redirect_to err.redirect_uri(pending_request)
-      end
+    decision = params.fetch(:decision, false)
+    unless decision == 'allow'
+      err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
+      return redirect_to err.redirect_uri(pending_request)
+    end
 
+    handle_oauth_exception do
       pending_request = OauthPendingRequest.find_by_id params[:id]
       unless pending_request
         return render :nothing => true, :status => :bad_request
       end
       #!!possible bug may result here with the attributes call considering that scope
       #  should be space delimited strings
-      #  pending_request.scope = params[:pending_request][:scope]
-      unless pending_request.valid?
+      pending_request.scope = params[:pending_request][:scope]
+      unless pending_request.save
         return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
       end
 
@@ -45,7 +45,6 @@ class Oauth2Controller < ApplicationController
   # access_token, refresh_token
   def token
     handle_oauth_exception do
-      user = User.first
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
       handler = OAuth2::Server::RequestHandler.new(@oa_request)
       return render :json => handler.access_token_response(current_user)

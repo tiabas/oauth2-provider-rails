@@ -1,20 +1,21 @@
 class OauthAccessToken < ActiveRecord::Base
   extend OAuth2::Helper
 
-  attr_accessible :user_id, :client_id, :scope, :expires_in, :token_type, :refresh_token, :token
-
-  CLIENT_SCOPES = %w{ scope1 scope2 scope3 }
+  attr_accessible :user_id, :client_id, :scope, :expires_in, :token_type, :refresh_token, :token, :scope 
 
   validates_presence_of :token, :token_type, :expires_in, :refresh_token #, :access_type, :scope
   
   validates_uniqueness_of :refresh_token, :scope => [:client_id]
 
+  validate :validate_scope
+
 
   belongs_to :user  
   
-  belongs_to :oauth_client_application, :foreign_key => "client_id"
+  belongs_to :oauth_client_application
 
   has_one :oauth_token_scope
+
 
   before_create :build_token_scope
 
@@ -65,13 +66,18 @@ class OauthAccessToken < ActiveRecord::Base
     update_attribute :access_token, generate_urlsafe_key
   end
 
-  # def validate_scope
-  #   scope_errors = []
-  #   scope.split(",").each do |scope|
-  #     scope_errors << "invalid scope #{scope}"
-  #   end
-  #   @errors[:scope] = scope_errors.join(", ") if scope_errors.any?
-  # end
+  def validate_scope
+    scope_errors = []
+    scope.split(",").each do |scope|
+      next if OauthTokenScope.SCOPE_VAlUES.include? scope
+      scope_errors << "invalid scope #{scope}"
+    end
+    if scope_errors.any?
+      @errors[:scope] = scope_errors.join(", ")
+      return false
+    end
+    true
+  end
 
   def to_oauth_response
     {

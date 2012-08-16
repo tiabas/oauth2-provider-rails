@@ -3,6 +3,8 @@ class OauthPendingRequest < ActiveRecord::Base
 
   validate :requested_scope_must_include_approved_scope, :on => :update
 
+  before_save :set_expiration
+  
   def scope_values
     return [] unless self.scope
     scopes = self.scope.split(' ')

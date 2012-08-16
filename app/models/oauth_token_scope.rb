@@ -1,6 +1,10 @@
 class OauthTokenScope < ActiveRecord::Base
 
-  attr_accessible nil
+  CLIENT_SCOPES = [ :profile, :files, :pages, :topics, :communities, :activities, :messages,
+                    :notifications, :invitations, :groups, :relationships]
 
-  belongs_to :oauth_token
+  attr_accessible CLIENT_SCOPES
+
+  belongs_to :oauth_access_token
+
 end

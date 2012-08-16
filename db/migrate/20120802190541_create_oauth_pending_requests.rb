@@ -10,6 +10,7 @@ class CreateOauthPendingRequests < ActiveRecord::Migration
       t.string  :state
       t.string  :scope
       t.boolean :approved, :default => false
+      # t.datetime :expire_at
       t.timestamps
     end
   end
