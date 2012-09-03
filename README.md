@@ -31,7 +31,14 @@ to the user-agent
       handle_oauth_exception do
         @oa_request = OAuth2::Server::Request.new params.symbolize_keys
         handler = OAuth2::Server::RequestHandler.new(@oa_request)
-        handler.verify_client_id
+         @app = handler.client_application
+        unless params.fetch(:approval_prompt, false)
+          if @oa_request.response_type? :token
+            return redirect_to handler.access_token_redirect_uri(@user)
+          end
+
+          return redirect_to handler.authorization_redirect_uri(@user)
+        end
         @oa_pending_request = OauthPendingRequest.create!(@oa_request.to_hsh)
       end
     end
@@ -85,11 +92,106 @@ response type was 'code', the authorization code is returned in the query compon
       end
     end
 
-## Authorization Code
+## Step 3
+After the application receives the authorization code, it may exchange the authorization code for an access token and a refresh token. A request needs
+to be made to the token endpoint. The request will need to include the client id, authorization code and optionally, the redirect URI. The host name in
+the redirect URI, if included, must match that which was used when registering the client application.
+
+    POST /oauth2/token HTTP/1.1
+    Host: authorization.server.com
+    Content-Type: application/x-www-form-urlencoded
+
+    code=4/v6xr77ewYqhvHSyW6UJ1w7jKwAzu&
+    client_id={client_id}&
+    client_secret={client_secret}&
+    redirect_uri=https://client.server.example.com/code&
+    grant_type=authorization_code&
+    state=xyz
+
+The above request will be handle by the "token" action in the oauth2 controller:
+
+    def token
+      handle_oauth_exception do
+        @oa_request = OAuth2::Server::Request.new params.symbolize_keys
+        handler = OAuth2::Server::RequestHandler.new(@oa_request)
+        return render :json => handler.access_token_response(current_user)
+      end
+    end
+
+A successful response will include: access_token, refresh_token, expires_in, token_type. If the state parameter was included in the request, it will also
+be included in the response
+
+    { 
+      "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
+      "token_type": "Bearer",
+      "expires_in": 3600,
+      "refresh_token": "QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2",
+      "state": "xyz"
+    }
 
 ## Client Credentials
 
+Request:
+
+    POST /oauth2/token HTTP/1.1
+    Host: authorization.server.com
+    Content-Type: application/x-www-form-urlencoded
+
+    client_id={client_id}&
+    client_secret={client_secret}&
+    redirect_uri=https://client.server.example.com/code&
+    grant_type=client_credentials&
+    state=xyz
+
 ## Password
 
-## Refresh Token
+    {
+      "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
+      "token_type": "Bearer",
+      "expires_in": 3600,
+      "refresh_token": "QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2",
+      "state": "xyz"
+    }
 
+Request:
+
+    POST /oauth2/token HTTP/1.1
+    Host: authorization.server.com
+    Content-Type: application/x-www-form-urlencoded
+
+    client_id={client_id}&
+    username={username}&
+    password={password}&
+    redirect_uri=https://client.server.example.com/code&
+    grant_type=password&
+    state=xyz
+
+Response:
+
+    {
+      "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
+      "token_type": "Bearer",
+      "expires_in": 3600,
+      "refresh_token": "QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2",
+      "state": "xyz"
+    }
+
+## Refresh Token
+A new access token may be obtain by hitting the token endpoint. To obtain a new access token, an HTTPs POST such as the one below is made. These requests must include the following parameters: client_id, refresh_token, grant_type
+
+    POST /o/oauth2/token HTTP/1.1
+    Host: accounts.google.com
+    Content-Type: application/x-www-form-urlencoded
+
+    client_id={client_id}&
+    client_secret={client_secret}&
+    refresh_token=QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2&
+    grant_type=refresh_token
+
+ A response from the request above is shown below:
+
+    {
+      "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
+      "expires_in": 3600,
+      "token_type": "Bearer"
+    }

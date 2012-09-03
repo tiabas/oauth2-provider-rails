@@ -6,7 +6,14 @@ class Oauth2Controller < ApplicationController
     handle_oauth_exception do
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
       handler = OAuth2::Server::RequestHandler.new(@oa_request)
-      handler.validate!
+       @app = handler.client_application
+      unless params.fetch(:approval_prompt, false)
+        if @oa_request.response_type? :token
+          return redirect_to handler.access_token_redirect_uri(@user)
+        end
+
+        return redirect_to handler.authorization_redirect_uri(@user)
+      end
       @oa_pending_request = OauthPendingRequest.create!(@oa_request.to_hsh)
     end
   end
