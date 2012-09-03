@@ -5,6 +5,22 @@ requires that you have the oauth2-ruby gem installed.
 
 [code]: https://github.com/tiabas/oauth2-ruby
 
+## Error Handling
+All controller actions are wrapped in block that authomatically takes care of authorization and authentication error responses. This is included 
+as an example. Your milage may vary however, exception handling could be done in a similar fashion.
+
+    def handle_oauth_exception(&block)
+      yield
+    rescue Exception => e
+      if e.is_a?(OAuth2::OAuth2Error::Error)
+        if @oa_request.redirect_uri_valid?
+          return redirect_to e.redirect_uri(@oa_request)
+        end
+        return render :text => "the client provided an invalid redirect URI"
+      end
+      raise e
+    end
+
 ## Implicit Grant Flow
 
 The implicit grant type is used to obtain access tokens and is optimized for public clients known to operate a
