@@ -181,8 +181,8 @@ Response:
 ## Refresh Token
 A new access token may be obtain by hitting the token endpoint. To obtain a new access token, an HTTPs POST such as the one below is made. These requests must include the following parameters: client_id, refresh_token, grant_type
 
-    POST /o/oauth2/token HTTP/1.1
-    Host: accounts.google.com
+    POST /oauth2/token HTTP/1.1
+    Host: authorization.server.com
     Content-Type: application/x-www-form-urlencoded
 
     client_id={client_id}&
