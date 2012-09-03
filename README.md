@@ -41,6 +41,16 @@ A client initiates the flow by directing the resource owner's user-agent to the 
 authorize action within your oauth controller class. The request parameters are stored as a pending request object and are not sent back
 to the user-agent
 
+    # Client request to authorization server
+    POST /oauth2/token HTTP/1.1
+    Host: authorization.server.com
+    Content-Type: application/x-www-form-urlencoded
+
+    client_id={client_id}&
+    redirect_uri=https://client.server.example.com/code&
+    response_type=code&
+    state=xyz
+
     # Authorization Endpoint
     # This is the endpoint that would be used for the Implicit grant flow
     def authorize
@@ -108,6 +118,14 @@ response type was 'code', the authorization code is returned in the query compon
       end
     end
 
+A successful response look similar to the one below:
+    
+    { 
+      "code": "O0RfagVSxCn6svUlxLQvSNSpCCnImfMv2zifYDPZXO19wiPYxMzQ1MDEzNzU3",
+      "state": "xyz"
+    }
+
+
 ## Step 3
 After the application receives the authorization code, it may exchange the authorization code for an access token and a refresh token. A request needs
 to be made to the token endpoint. The request will need to include the client id, authorization code and optionally, the redirect URI. The host name in
@@ -120,7 +138,7 @@ the redirect URI, if included, must match that which was used when registering t
     code=4/v6xr77ewYqhvHSyW6UJ1w7jKwAzu&
     client_id={client_id}&
     client_secret={client_secret}&
-    redirect_uri=https://client.server.example.com/code&
+    redirect_uri=https://client.server.example.com/oauth2_callback&
     grant_type=authorization_code&
     state=xyz
 
@@ -145,6 +163,7 @@ be included in the response
       "state": "xyz"
     }
 
+
 ## Client Credentials
 
 Request:
@@ -155,7 +174,7 @@ Request:
 
     client_id={client_id}&
     client_secret={client_secret}&
-    redirect_uri=https://client.server.example.com/code&
+    redirect_uri=https://client.server.example.com/oauth2_callback&
     grant_type=client_credentials&
     state=xyz
 
@@ -169,6 +188,7 @@ Response:
       "state": "xyz"
     }
 
+
 ## Password
 
 Request:
@@ -180,7 +200,7 @@ Request:
     client_id={client_id}&
     username={username}&
     password={password}&
-    redirect_uri=https://client.server.example.com/code&
+    redirect_uri=https://client.server.example.com/oauth2_callback&
     grant_type=password&
     state=xyz
 
@@ -194,6 +214,7 @@ Response:
       "state": "xyz"
     }
 
+
 ## Refresh Token
 A new access token may be obtain by hitting the token endpoint. To obtain a new access token, an HTTPs POST such as the one below is made. These requests must include the following parameters: client_id, refresh_token, grant_type
 
@@ -204,6 +225,7 @@ A new access token may be obtain by hitting the token endpoint. To obtain a new 
     client_id={client_id}&
     client_secret={client_secret}&
     refresh_token=QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2&
+    redirect_uri=https://client.server.example.com/oauth2_callback&
     grant_type=refresh_token
 
  A response from the request above is shown below:
