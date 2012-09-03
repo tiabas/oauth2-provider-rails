@@ -143,7 +143,7 @@ Request:
     grant_type=client_credentials&
     state=xyz
 
-## Password
+Response:
 
     {
       "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
@@ -152,6 +152,8 @@ Request:
       "refresh_token": "QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2",
       "state": "xyz"
     }
+
+## Password
 
 Request:
 
