@@ -51,8 +51,9 @@ to the user-agent
     response_type=code&
     state=xyz
 
-    # Authorization Endpoint
-    # This is the endpoint that would be used for the Implicit grant flow
+
+The controller action that handles the above request is below:
+
     def authorize
       handle_oauth_exception do
         @oa_request = OAuth2::Server::Request.new params.symbolize_keys
