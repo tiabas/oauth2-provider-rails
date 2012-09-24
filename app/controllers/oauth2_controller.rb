@@ -20,8 +20,7 @@ class Oauth2Controller < ApplicationController
 
   # 
   def process_authorization
-    decision = params.fetch(:decision, false)
-    unless decision == 'allow'
+    unless params.fetch(:allow_access, false)
       err = OAuth2::OAuth2Error::AccessDenied.new "the user denied your request"
       return redirect_to err.redirect_uri(pending_request)
     end
@@ -38,7 +37,7 @@ class Oauth2Controller < ApplicationController
         return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
       end
 
-      @oa_request = OAuth2::Server::Request.new pending_request.attributes.symbolize_keys
+      @oa_request = OAuth2::Server::Request.new(pending_request.attributes.symbolize_keys)
       handler = OAuth2::Server::RequestHandler.new(@oa_request)
 
       if @oa_request.response_type? :token
@@ -60,9 +59,7 @@ class Oauth2Controller < ApplicationController
 
   def register; end
 
-  def process_registration
-
-  end
+  def process_registration; end
 
 private
 
