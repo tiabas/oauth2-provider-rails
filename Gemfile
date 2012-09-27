@@ -15,8 +15,8 @@ gem 'json'
 group :assets do
   gem 'sass-rails',   '~> 3.2.3'
   gem 'coffee-rails', '~> 3.2.1'
-
   gem 'uglifier', '>= 1.0.3'
+  gem "twitter-bootstrap-rails"
 end
 
 gem 'jquery-rails'
@@ -42,4 +42,5 @@ gem 'addressable'
 
 gem 'mocha', ">=0.12.1"
 
-gem 'oauth2', ">=0.1.4", :path => '~/Sites/oauth2-ruby' 
+
+gem 'oauth2', ">=0.1.4", :path => '~/Sites/oauth2-server' 
