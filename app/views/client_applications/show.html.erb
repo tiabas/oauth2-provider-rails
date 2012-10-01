@@ -1,0 +1,27 @@
+<div class="container-fluid">
+<h3>OAuth Settings</h3>
+<table class="table">
+  <tbody>
+    <tr>
+      <td>Client Id</td>
+      <td><tt><%= @client_application.client_id %></tt></td>
+    </tr>
+    <tr>
+      <td>Client Secret</td>
+      <td><tt><%= @client_application.client_secret %></tt></td>
+    </tr>
+    <tr>
+      <td>Token URL</td>
+      <td><tt><%= oauth2_token_url %></tt></td>
+    </tr>
+    <tr>
+      <td>Authorize URL</td>
+      <td><tt><%= oauth2_authorize_url %></tt></td>
+    </tr>
+    <tr>
+      <td>Redirect URL</td>
+      <td><tt><%= @client_application.redirect_uri %></tt></td>
+    </tr>
+  </tbody>
+</table>
+</div>

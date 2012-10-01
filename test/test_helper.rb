@@ -29,11 +29,11 @@ class ActiveSupport::TestCase
   end
 
   def self.create_dummy_client_app
-    OauthClientApplication.create!(
+    ClientApplication.create!(
       :name => 'dummy app',
       :website => 'https://example.com',
       :description => 'a dummy app for testing OAuth2',
-      :client_type => 'web',
+      :client_type => 1,
       :redirect_uri => 'https://example.com/oauth2/cb'
     )
   end 

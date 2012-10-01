@@ -1,0 +1,70 @@
+<fieldset>
+  <legend>Application Details</legend>
+  <div class="row-fluid"> 
+  <div class="control-group">
+    <%=f.label :name, "Name",
+      :class => "control-label",
+      :title => "This name will appear on messages created by your application" %>
+    <div class="controls">
+      <%=f.text_field :name, :maxlength => 255 %>
+      <p class="help-block">
+        Your application name.
+      </p>
+    </div>
+  </div>
+  <div class="control-group">
+    <%=f.label :description, "Description",
+    :class => "control-label" %>
+    <div class="controls">
+      <%=f.text_area :description, :rows => 4, :class => "span6", :maxlength => 200 %>
+      <p class="help-block">
+        Your application description, which will be shown in user-facing 
+        authorization screens. Between 10 and 200 characters max.
+      </p>
+    </div>
+  </div>
+  <div class="control-group">
+    <%=f.label :website, "Website",
+     :class => "control-label",
+     :title => "Your site or application’s URL" %>
+    <div class="controls">
+      <%=f.text_field :website, :type => :url, :maxlength => 255 %>
+    </div>
+  </div>
+  <div class="control-group">
+    <%=f.label :client_type, "Client Type",
+     :class => "control-label",
+     :title => "What kind of application will this be?" %>
+    <div class="controls">
+      <%=f.select :client_type, :collection => client_types_options %>
+    </div>
+  </div>
+  <div class="control-group">
+    <%=f.label :redirect_uri, "Redirect URL",
+      :class => "control-label",
+      :title => "The redirect URL used by OAuth" %>
+    <div class="controls">
+      <%=f.text_field :redirect_uri, :type => :url, :maxlength => 255 %>
+      <p class="help-block">
+        Where should we return after successfully authenticating? OAuth 2.0 applications should explicitly specify their redirect URL in 
+        the authorization step and its domain should match the one here.
+      </p>
+    </div>
+  </div>
+  <div class="control-group">
+    <%=f.label :terms_of_service, "Terms of service",
+      :class => "control-label" %>
+    <div class="controls">
+      <%=f.check_box :terms_of_service %>
+      <p class="help-block">
+        By clicking the "I Agree" button, you acknowledge that you have read and 
+        understand this agreement and agree to be bound by its terms and conditions.
+      </p>
+    </div>
+  </div>
+  <div class="form-actions">  
+    <button type="submit" class="btn btn-primary">Save</button>  
+    <button class="btn btn-danger">Cancel</button>  
+  </div>  
+</div>
+</fieldset>

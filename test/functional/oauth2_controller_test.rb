@@ -11,7 +11,7 @@ class Oauth2ControllerTest < ActionController::TestCase
     @expires_in = 3600
     @token_type = "Bearer"
     @state = "xyz"
-    @redirect_uri = "https://example.com/cb"
+    @redirect_uri = "https://example.com/oauth/v2/cb"
     @token_response = {
                         :access_token => @access_token,
                         :refresh_token => @refresh_token,
@@ -23,7 +23,13 @@ class Oauth2ControllerTest < ActionController::TestCase
                         :redirect_uri => @redirect_uri
                       }
     @user = create_dummy_user
-    @client_app = create_dummy_client_app
+    @client_app = ClientApplication.create!(
+      :name => 'dummy app',
+      :website => 'https://example.com',
+      :description => 'a dummy app for testing OAuth2',
+      :client_type => 1,
+      :redirect_uri => @redirect_uri
+    )
   end
 
   test "should return bad request without any parameters provided" do
@@ -94,7 +100,7 @@ class Oauth2ControllerTest < ActionController::TestCase
     assert_redirected_to "#{@redirect_uri}?error=invalid_client&error_description=unknown%20client"
   end
 
-  test "should succeed if response type code and client id valid" do
+  test "should render authorization page if response type code and client id valid" do
     login_user(@user)
     OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(true)
     request_params = { 
@@ -109,9 +115,9 @@ class Oauth2ControllerTest < ActionController::TestCase
     assert_response :success
   end
 
-  test "should succeed if response type token and client id valid" do
+  test "should render authorization page if response type token and client id valid" do
     login_user(@user)
-    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(true)
+    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(@client_app)
     request_params = { 
                       :client_id => "s6BhdRkqt3",
                       :response_type => "token",
@@ -124,7 +130,35 @@ class Oauth2ControllerTest < ActionController::TestCase
     assert_response :success
   end
 
-  test "should redirect with error message if user denies request " do
+  test "should redirect with authorization code if approval prompt is not forced" do
+    login_user(@user)
+    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(@client_app)
+    request_params = { 
+                      :client_id => "s6BhdRkqt3",
+                      :response_type => "code",
+                      :redirect_uri => @redirect_uri,
+                      :state => @state,
+                      :approval_prompt => false
+                     }
+    get :authorize, request_params
+    assert_redirected_to "#{@redirect_uri}?code=#{@code}&state=#{@state}"
+  end
+
+  test "should redirect with access token if approval prompt is not forced" do
+    login_user(@user)
+    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(@client_app)
+    request_params = { 
+                      :client_id => "s6BhdRkqt3",
+                      :response_type => "token",
+                      :redirect_uri => @redirect_uri,
+                      :state => @state,
+                      :approval_prompt => false
+                     }
+    get :authorize, request_params
+    assert_redirected_to "#{@redirect_uri}#access_token=#{@access_token}&token_type=Bearer&expires_in=3600&refresh_token=#{@refresh_token}&state=#{@state}"
+  end
+
+  test "should redirect with error message if user denies request" do
     login_user(@user)
     pending_request = OauthPendingRequest.create!(
                       :client_id => @client_app.client_id,
@@ -132,7 +166,7 @@ class Oauth2ControllerTest < ActionController::TestCase
                       :redirect_uri => @redirect_uri,
                       :state => @state
                       )
-    post :process_authorization, :id => pending_request.id, :commit => "deny"
+    post :process_authorization, :id => pending_request.id, :allow_access => false
     assert_redirected_to "#{@redirect_uri}?error=access_denied&error_description=the%20user%20denied%20your%20request"
   end
 
@@ -146,7 +180,7 @@ class Oauth2ControllerTest < ActionController::TestCase
                       :redirect_uri => @redirect_uri,
                       :state => @state
                       )
-    post :process_authorization, :id => pending_request.id, :commit => "allow"
+    post :process_authorization, :id => pending_request.id, :allow_access => true
     assert_redirected_to "#{@redirect_uri}#access_token=#{@access_token}&token_type=Bearer&expires_in=3600&refresh_token=#{@refresh_token}&state=#{@state}"
   end
 
@@ -159,7 +193,7 @@ class Oauth2ControllerTest < ActionController::TestCase
                       :redirect_uri => @redirect_uri,
                       :state => @state
                       )
-    post :process_authorization, :id => pending_request.id, :commit => "allow"
+    post :process_authorization, :id => pending_request.id, :allow_access => true
     assert_redirected_to "#{@redirect_uri}?code=#{@code}&state=#{@state}"
   end
 

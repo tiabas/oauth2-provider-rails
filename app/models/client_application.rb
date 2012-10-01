@@ -1,13 +1,18 @@
-class OauthClientApplication < ActiveRecord::Base
+class ClientApplication < ActiveRecord::Base
   include OAuth2::Helper
   
-  CLIENT_TYPES = %w{ native web user-agent }
+  CLIENT_TYPES = { 
+                  "Native" => '1',
+                  "Web" => '2',
+                  "User agent" => '3',
+                  "Service" => '4'
+                 }
 
-  attr_accessible :name, :website, :description, :client_type, :redirect_uri, :terms_of_service
-
+  attr_accessible :name, :website, :description, :email, :redirect_uri, :terms_of_service
+  attr_protected  :client_id, :client_secret, :client_type
   
   validates :name, :website, :redirect_uri, :description, :client_id,
-            :client_secret, :client_type,
+            :client_secret, :client_type, :terms_of_service,
             :presence => true
 
   validates :client_id,
@@ -17,18 +22,19 @@ class OauthClientApplication < ActiveRecord::Base
             :uniqueness => true
 
   validates :client_type,
-            :inclusion => { :in => CLIENT_TYPES }
+            :inclusion => { :in => CLIENT_TYPES.values }
 
-  # validates :terms_of_service,
-  #           :acceptance => true,
-  #           :on => :create
+  validates :terms_of_service,
+            :acceptance => true,
+            :on => :create
 
   has_many  :oauth_access_token
   has_many  :oauth_authorization_code
 
   before_validation :generate_credentials, :on => :create
+
   def self.find_client_with_id(c_id)
-    self.find_by_client_id c_id
+    self.find_by_client_id(c_id)
   end
 
   def self.authenticate(client_id, client_secret)

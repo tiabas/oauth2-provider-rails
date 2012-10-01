@@ -12,7 +12,7 @@ class OauthAccessToken < ActiveRecord::Base
 
   belongs_to :user  
   
-  belongs_to :oauth_client_application
+  belongs_to :client_application
 
   has_one :oauth_token_scope
 
@@ -67,19 +67,19 @@ class OauthAccessToken < ActiveRecord::Base
   end
 
   def validate_scope
-    scope_errors = []
-    scope.split(",").each do |scope|
-      next if OauthTokenScope.SCOPE_VAlUES.include? scope
-      scope_errors << "invalid scope #{scope}"
-    end
-    if scope_errors.any?
-      @errors[:scope] = scope_errors.join(", ")
-      return false
-    end
+    # scope_errors = []
+    # scope.split(",").each do |scope|
+    #   next if OauthTokenScope.SCOPE_VAlUES.include? scope
+    #   scope_errors << "invalid scope #{scope}"
+    # end
+    # if scope_errors.any?
+    #   @errors[:scope] = scope_errors.join(", ")
+    #   return false
+    # end
     true
   end
 
-  def to_oauth_response
+  def to_hash
     {
       :access_token => token,
       :token_type => token_type,

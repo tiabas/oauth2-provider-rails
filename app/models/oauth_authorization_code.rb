@@ -3,11 +3,11 @@ class OauthAuthorizationCode < ActiveRecord::Base
 
   attr_accessible :client_application_id, :user_id, :code, :redirect_uri
 
-   belongs_to :oauth_client_application, :foreign_key => "client_application_id"
+  belongs_to :client_application
 
   validates_presence_of :client_application_id, :code, :redirect_uri
 
-  def self.generate_authorization_code(client, redirect_uri)
+  def self.generate_authorization_code(client, user, redirect_uri)
     kode = create!(
               :code => generate_urlsafe_key,
               :client_application_id => client.id,

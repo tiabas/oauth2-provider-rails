@@ -13,6 +13,19 @@
 
 ActiveRecord::Schema.define(:version => 20120808054440) do
 
+  create_table "client_applications", :force => true do |t|
+    t.string   "name"
+    t.string   "website"
+    t.string   "description"
+    t.string   "client_type"
+    t.string   "client_id"
+    t.string   "client_secret"
+    t.string   "email_address"
+    t.string   "redirect_uri"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
+  end
+
   create_table "oauth_access_tokens", :force => true do |t|
     t.integer  "user_id"
     t.integer  "client_id"
@@ -35,19 +48,6 @@ ActiveRecord::Schema.define(:version => 20120808054440) do
     t.datetime "updated_at",            :null => false
   end
 
-  create_table "oauth_client_applications", :force => true do |t|
-    t.string   "name"
-    t.string   "website"
-    t.string   "description"
-    t.string   "client_type"
-    t.string   "client_id"
-    t.string   "client_secret"
-    t.string   "email_address"
-    t.string   "redirect_uri"
-    t.datetime "created_at",    :null => false
-    t.datetime "updated_at",    :null => false
-  end
-
   create_table "oauth_pending_requests", :force => true do |t|
     t.string   "user_id"
     t.string   "client_id"
@@ -62,14 +62,15 @@ ActiveRecord::Schema.define(:version => 20120808054440) do
   end
 
   create_table "oauth_token_scopes", :force => true do |t|
-    t.boolean  "user_profile"
-    t.boolean  "user_files"
-    t.boolean  "user_messages"
-    t.boolean  "user_pages"
-    t.boolean  "user_groups"
-    t.boolean  "user_networks"
-    t.boolean  "user_invitations"
-    t.boolean  "user_presences"
+    t.boolean  "profile"
+    t.boolean  "files"
+    t.boolean  "messages"
+    t.boolean  "pages"
+    t.boolean  "groups"
+    t.boolean  "networks"
+    t.boolean  "invitations"
+    t.boolean  "presences"
+    t.boolean  "communities"
     t.boolean  "read_follower_lists"
     t.datetime "created_at",          :null => false
     t.datetime "updated_at",          :null => false
