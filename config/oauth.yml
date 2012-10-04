@@ -1,5 +1,5 @@
 datastores:
-  access_token: OauthAccessToken
+  access_token: AccessToken
   client_application: ClientApplication
-  authorization_code: OauthAuthorizationCode
+  authorization_code: AuthorizationCode
   user: User

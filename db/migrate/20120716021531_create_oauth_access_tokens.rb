@@ -1,4 +1,5 @@
 class CreateOauthAccessTokens < ActiveRecord::Migration
+  #TODO add unique constraint on user, client, token and token_type
   def change
     create_table :oauth_access_tokens do |t|
       t.integer  :user_id

@@ -102,9 +102,8 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should render authorization page if response type code and client id valid" do
     login_user(@user)
-    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(true)
     request_params = { 
-                      :client_id => "s6BhdRkqt3",
+                      :client_id => @client_app.id,
                       :response_type => "code",
                       :redirect_uri => @redirect_uri,
                       :state => @state
@@ -117,9 +116,8 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should render authorization page if response type token and client id valid" do
     login_user(@user)
-    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(@client_app)
     request_params = { 
-                      :client_id => "s6BhdRkqt3",
+                      :client_id => @client_app.id,
                       :response_type => "token",
                       :redirect_uri => @redirect_uri,
                       :state => @state
@@ -132,9 +130,8 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should redirect with authorization code if approval prompt is not forced" do
     login_user(@user)
-    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(@client_app)
     request_params = { 
-                      :client_id => "s6BhdRkqt3",
+                      :client_id => @client_app.id,
                       :response_type => "code",
                       :redirect_uri => @redirect_uri,
                       :state => @state,
@@ -146,9 +143,8 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should redirect with access token if approval prompt is not forced" do
     login_user(@user)
-    OAuth2::Server::RequestHandler.any_instance.stubs(:verify_client_id).returns(@client_app)
     request_params = { 
-                      :client_id => "s6BhdRkqt3",
+                      :client_id => @client_app.id,
                       :response_type => "token",
                       :redirect_uri => @redirect_uri,
                       :state => @state,
@@ -172,8 +168,8 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should if response type is token redirect with token if user approves request" do
     login_user(@user)
-    OauthAccessToken.any_instance.stubs(:token).returns(@access_token)
-    OauthAccessToken.any_instance.stubs(:refresh_token).returns(@refresh_token)
+    AccessToken.any_instance.stubs(:token).returns(@access_token)
+    AccessToken.any_instance.stubs(:refresh_token).returns(@refresh_token)
     pending_request = OauthPendingRequest.create!(
                       :client_id => @client_app.client_id,
                       :response_type => "token",
@@ -186,7 +182,7 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should if response type is token redirect with code if user approves request" do
     # login_user(@user)
-    OauthAuthorizationCode.any_instance.stubs(:code).returns(@code)
+    AuthorizationCode.any_instance.stubs(:code).returns(@code)
     pending_request = OauthPendingRequest.create!(
                       :client_id => @client_app.client_id,
                       :response_type => "code",
@@ -199,15 +195,16 @@ class Oauth2ControllerTest < ActionController::TestCase
 
   test "should if grant type is authorization code respond with token" do
     login_user(@user)
-    OauthAccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
-    OauthAccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
-    auth_code = OauthAuthorizationCode.create!(
+    AccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
+    AccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
+    auth_code = AuthorizationCode.create!(
                   :client_application_id => @client_app.id,
                   :code => @code,
                   :redirect_uri => @redirect_uri
                 ) 
     request_params = {
                       :client_id => @client_app.client_id,
+                      :client_secret => @client_app.client_secret,
                       :grant_type => "authorization_code",
                       :code => @code,
                       :redirect_uri => @redirect_uri
@@ -223,10 +220,11 @@ class Oauth2ControllerTest < ActionController::TestCase
   test "should if grant type is password respond with token" do
     login_user(@user)
     User.stubs(:authenticate).returns(true)
-    OauthAccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
-    OauthAccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
+    AccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
+    AccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
     request_params = {
                       :client_id => @client_app.client_id,
+                      :client_secret => @client_app.client_secret,
                       :grant_type => "password",
                       :username => 'username',
                       :password => 'letmein',
@@ -241,8 +239,8 @@ class Oauth2ControllerTest < ActionController::TestCase
   end
 
   test "should if grant type is client credentials respond with token" do
-    OauthAccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
-    OauthAccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
+    AccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
+    AccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
     request_params = {
                       :client_id => @client_app.client_id,
                       :client_secret => @client_app.client_secret,
@@ -258,19 +256,21 @@ class Oauth2ControllerTest < ActionController::TestCase
   end
 
   test "should if grant type is refresh token respond with token" do
-    OauthAccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
-    OauthAccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
-    dummy_token = OauthAccessToken.new(
+    AccessToken.any_instance.stubs(:token).returns("aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1")
+    AccessToken.any_instance.stubs(:refresh_token).returns("e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1")
+    dummy_token = AccessToken.new(
                     :client_id => @client_app.id,
+                    :client_secret => @client_app.client_secret,
                     :user_id => @user.id,
                     :token => 'aXsDTMH1cMx4G14TYfQMDuxBGeWjvP1OoaT9D70uP2zP9QMxMzQ0NjYzODE1',
                     :token_type => @token_type,
                     :refresh_token => 'e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1',
                     :expires_in => @expires_in
                   )
-    OauthAccessToken.stubs(:generate_from_refresh_token).returns(dummy_token)
+    AccessToken.stubs(:generate_from_refresh_token).returns(dummy_token)
     request_params = {
                       :client_id => @client_app.client_id,
+                      :client_secret => @client_app.client_secret,
                       :refresh_token => "e22RFX9UHaKjHmqbF3J7Z5AV1eYlk21CczuAkgy3KuWhN5w4NVMxMzQ0NjYzODE1",
                       :grant_type => "refresh_token",
                       :redirect_uri => @redirect_uri

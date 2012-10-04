@@ -28,8 +28,8 @@ class ClientApplication < ActiveRecord::Base
             :acceptance => true,
             :on => :create
 
-  has_many  :oauth_access_token
-  has_many  :oauth_authorization_code
+  has_many  :access_token
+  has_many  :authorization_code
 
   before_validation :generate_credentials, :on => :create
 

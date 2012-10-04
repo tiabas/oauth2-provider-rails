@@ -1,7 +1,8 @@
 class User < ActiveRecord::Base
   attr_accessible :email, :first_name, :last_name, :password, :password_confirmation
 
-  has_many :oauth_access_token
+  has_many :access_token
+  has_many :authorization_code
 
   has_secure_password
 
