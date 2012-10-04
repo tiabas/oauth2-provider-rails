@@ -1,13 +1,19 @@
 class OauthPendingRequest < ActiveRecord::Base
-  attr_accessible :client_id, :client_secret, :redirect_uri, :response_type, :scope, :state
+
+  attr_accessible :client_id, :redirect_uri, :response_type, :scope, :state
 
   validate :requested_scope_must_include_approved_scope, :on => :update
 
-  # before_save :set_expiration
-  
-  def scope_values
-    return [] unless self.scope
-    scopes = self.scope.split(' ')
+  validate_presence_of :client_id, :user_id, :response_type
+
+  before_save :generate_signature
+
+  private
+
+  def generate_signature
+    key = self.id.to_s
+    raw = [self.user_id, Time.now.to_i, self.client_id].join(" ")
+    self.signature = Digest::HMAC.hexdigest(key, raw, Digest::SHA1)
   end
 
   def requested_scope_must_include_approved_scope

@@ -1,6 +1,8 @@
 class Oauth2Controller < ApplicationController
   # Authorization Endpoint
   # This is the endpoint that would be used for the Implicit grant flow
+  # NOTE: Facebook does this but, you should NEVER EVER send the request
+  # parameters back to the client. It is a DUMB move!
   def authorize
     handle_oauth_exception do
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
@@ -14,15 +16,16 @@ class Oauth2Controller < ApplicationController
         end
         raise OAuth2::OAuth2Error::Error.new("Invalid response type #{@oa_request.response_type}")
       end
-      @oa_pending_request = OauthPendingRequest.create!(@oa_request.to_hsh)
+      pending_request = OauthPendingRequest.create!(@oa_request.to_hash)
+      @request_signature = pending_request.signature
     end
   end
 
   # 
   def process_authorization
     handle_oauth_exception do
-      pending_request = OauthPendingRequest.find_by_id params[:id]
-      unless pending_request
+      pending_request = OauthPendingRequest.find_by_signature params[:rs]
+      unless (pending_request || (pending_request.user == current_user))
         return render :nothing => true, :status => :bad_request
       end
 
@@ -33,9 +36,9 @@ class Oauth2Controller < ApplicationController
       #!!possible bug may result here with the attributes call considering that scope
       #  should be space delimited strings
       # pending_request.scope = params[:pending_request][:scope]
-      unless pending_request.save
-        return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
-      end
+      # unless pending_request.save
+      #   return render :text => pending_request.errors.full_messages.join(' '), :status => :bad_request
+      # end
 
       @oa_request = OAuth2::Server::Request.new(pending_request.attributes.symbolize_keys)
       handler = OAuth2::Server::RequestHandler.new(@oa_request)
@@ -56,10 +59,6 @@ class Oauth2Controller < ApplicationController
       return render :json => handler.access_token_response(current_user)
     end
   end
-
-  def register; end
-
-  def process_registration; end
 
 private
 

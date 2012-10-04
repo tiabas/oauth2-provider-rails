@@ -51,14 +51,14 @@ class ClientApplicationTest < ActiveSupport::TestCase
   end
 
   def test_creation_of_client_application_with_client_id_specified
-    attrs = @attributes.merge(:client_id => 'cUAkGNuYFFo')
+    attrs = @attributes.merge(:client_id => 'cUAkGNuYFf0')
     assert_raises ActiveModel::MassAssignmentSecurity::Error do
       app = ClientApplication.new(attrs)
     end
   end
 
   def test_creation_of_client_application_with_client_secret_specified
-    attrs = @attributes.merge(:client_secret => 'HUAkeHuYRFtCo')
+    attrs = @attributes.merge(:client_secret => 'hUAkeHUyRFtCo')
     assert_raises ActiveModel::MassAssignmentSecurity::Error do
       app = ClientApplication.new(attrs)
     end

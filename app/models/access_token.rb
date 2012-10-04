@@ -1,6 +1,10 @@
 class OauthAccessToken < ActiveRecord::Base
   extend OAuth2::Helper
 
+  EXPIRES_IN = 3600
+  TOKEN_TYPE = 'Bearer'
+  DEFAULT_SCOPE = 'default'
+
   attr_accessible :user_id, :client_id, :scope, :expires_in, :token_type, :refresh_token, :token, :scope 
 
   validates_presence_of :token, :token_type, :expires_in, :refresh_token #, :access_type, :scope
@@ -28,10 +32,11 @@ class OauthAccessToken < ActiveRecord::Base
     token
   end
 
-  def self.generate_token(client, user=nil, opts={})
-    scope = opts[:scope] || 'default'
-    expires_in = opts[:expires_in] || 3600
-    token_type = opts[:token_type] || 'Bearer'
+  def self.generate_token(client, opts={})
+    user = opts[:user]
+    scope = opts[:scope] || DEFAULT_SCOPE
+    expires_in = opts[:expires_in] || EXPIRES_IN
+    token_type = opts[:token_type] || TOKEN_TYPE
     refreshable = opts[:refreshable] || true
     refresh_token = refreshable ? generate_urlsafe_key : nil
     token = create!(

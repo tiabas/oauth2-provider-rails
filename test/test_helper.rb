@@ -9,8 +9,6 @@ class ActiveSupport::TestCase
   # -- they do not yet inherit this setting
   fixtures :all
 
-  # Add more helper methods to be used by all tests here...
-
   def login_user(user)
     @request.session[:user_id] = user.id
   end
@@ -35,6 +33,7 @@ class ActiveSupport::TestCase
       :description => 'a dummy app for testing OAuth2',
       :client_type => 1,
       :redirect_uri => 'https://example.com/oauth2/cb'
+      :terms_of_service => '1'
     )
   end 
 
