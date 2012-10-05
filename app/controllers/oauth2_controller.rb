@@ -7,7 +7,8 @@ class Oauth2Controller < ApplicationController
     handle_oauth_exception do
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
       handler = OAuth2::Server::RequestHandler.new(@oa_request)
-       @app = handler.client_application
+      @app = handler.client_application
+
       unless params.fetch(:approval_prompt, true)
         if @oa_request.response_type?(:token)
           return redirect_to handler.access_token_redirect_uri(current_user)
@@ -16,6 +17,7 @@ class Oauth2Controller < ApplicationController
         end
         raise OAuth2::OAuth2Error::Error.new("Invalid response type #{@oa_request.response_type}")
       end
+
       @pending_auth_request = PendingAuthorizationRequest.from_request_params(@oa_request.to_hash)
       @pending_auth_request.user = current_user
       @pending_auth_request.save!
@@ -47,12 +49,11 @@ class Oauth2Controller < ApplicationController
       if @oa_request.response_type? :token
         return redirect_to handler.access_token_redirect_uri(current_user)
       end
-
       return redirect_to handler.authorization_redirect_uri(current_user)
     end
   end
 
-  # access_token, refresh_token
+  # access_token, refresh_token, password, client credentials
   def token
     handle_oauth_exception do
       @oa_request = OAuth2::Server::Request.new params.symbolize_keys
