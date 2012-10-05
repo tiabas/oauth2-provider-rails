@@ -1,11 +1,12 @@
-class OauthAccessToken < ActiveRecord::Base
+class AccessToken < ActiveRecord::Base
+  include OAuth2::Helper
   extend OAuth2::Helper
-
   EXPIRES_IN = 3600
   TOKEN_TYPE = 'Bearer'
   DEFAULT_SCOPE = 'default'
 
   attr_accessible :user_id, :client_id, :scope, :expires_in, :token_type, :refresh_token, :token, :scope 
+
 
   validates_presence_of :token, :token_type, :expires_in, :refresh_token #, :access_type, :scope
   
@@ -18,12 +19,14 @@ class OauthAccessToken < ActiveRecord::Base
   
   belongs_to :client_application
 
-  has_one :oauth_token_scope
+  has_one :access_token_scope
 
 
   before_create :build_token_scope
 
-  def self.generate_from_refresh_token(client, ref_token, opts={})
+  def self.from_refresh_token(opts={})
+    client = opts[:client]
+    ref_token = opts[:refresh_token]
     token = where(
                 :client_id => client.id,
                 :refresh_token => ref_token
@@ -68,7 +71,8 @@ class OauthAccessToken < ActiveRecord::Base
   end 
 
   def refresh!
-    update_attribute :access_token, generate_urlsafe_key
+    self.token = generate_urlsafe_key
+    save
   end
 
   def validate_scope

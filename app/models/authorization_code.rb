@@ -1,4 +1,4 @@
-class OauthAuthorizationCode < ActiveRecord::Base
+class AuthorizationCode < ActiveRecord::Base
   extend OAuth2::Helper
 
   EXPIRES_IN = 600
@@ -23,11 +23,27 @@ class OauthAuthorizationCode < ActiveRecord::Base
     kode.code
   end
 
-  def self.verify_authorization_code(client, code, redirect_uri)
+  def self.verify(opts={})
+    client = opts[:client]
+    code = opts[:code]
+    redirect_uri = opts[:redirect_uri]
     where(:client_application_id => client.id, :code => code, :redirect_uri => redirect_uri).first
   end
 
   def expired?
     (Time.now - created_at) > EXPIRES_IN
+  end
+
+  def active?
+    !deactivated_at
+  end
+
+  def deactivated?
+    !active?
+  end
+
+  def deactivate!
+    self.deactivated_at = Time.now
+    save
   end
 end

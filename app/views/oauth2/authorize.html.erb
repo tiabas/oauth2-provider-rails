@@ -1,4 +1,4 @@
-<%= form_for(@oa_pending_request, :url => oauth2_approval_path(:rs => @request_signature), :method => :post) do |request_form|-%>
+<%= form_for(@pending_auth_request, :url => oauth2_approval_path(:signature => @pending_auth_request.signature), :method => :post) do |request_form|-%>
   <section>
     <header><h1>Example app</h1></header>
     <div> The application "Example Client" would like to access your profile. Would you like to give "Example Client" access?

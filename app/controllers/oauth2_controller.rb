@@ -16,16 +16,17 @@ class Oauth2Controller < ApplicationController
         end
         raise OAuth2::OAuth2Error::Error.new("Invalid response type #{@oa_request.response_type}")
       end
-      pending_request = OauthPendingRequest.create!(@oa_request.to_hash)
-      @request_signature = pending_request.signature
+      @pending_auth_request = PendingAuthorizationRequest.from_request_params(@oa_request.to_hash)
+      @pending_auth_request.user = current_user
+      @pending_auth_request.save!
     end
   end
 
   # 
   def process_authorization
     handle_oauth_exception do
-      pending_request = OauthPendingRequest.find_by_signature params[:rs]
-      unless (pending_request || (pending_request.user == current_user))
+      pending_request = PendingAuthorizationRequest.find_by_signature_and_user_id(params[:signature], current_user.id)
+      unless pending_request
         return render :nothing => true, :status => :bad_request
       end
 
