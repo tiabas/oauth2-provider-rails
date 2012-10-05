@@ -1,6 +1,7 @@
-class CreateOauthTokenScopes < ActiveRecord::Migration
+class CreateAccessTokenScopes < ActiveRecord::Migration
   def change
-    create_table :oauth_token_scopes do |t|
+    create_table :access_token_scopes do |t|
+      # t.integer :access_token_id
       t.boolean :profile
       t.boolean :files
       t.boolean :messages
