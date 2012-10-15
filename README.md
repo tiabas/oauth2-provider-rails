@@ -77,7 +77,6 @@ end
 ## Step 2
 The action will render a form requesting the user to either allow or deny the request
 
-```html
     <%= form_for(@oa_pending_request, :url => oauth2_process_authorization_path(:id => @oa_pending_request.id), :method => :post) do |request_form|-%>
       <section>
         <header><h1>Example app</h1></header>
@@ -86,7 +85,6 @@ The action will render a form requesting the user to either allow or deny the re
         <%= submit_tag :deny, :name => 'decision' %>
       </section>
     <% end -%>
-```
 
 When the user submits the form, the data is posted to the 'process_authorization' action of the oauth controller. If the user denies the request, the 
 user-agent is redirected to the callback URL with the error code and error description as parameters. Otherwise, the request parameters are loaded from
