@@ -127,10 +127,10 @@ end
 A successful response look similar to the one below:
 
 ```json    
-    { 
-      "code": "O0RfagVSxCn6svUlxLQvSNSpCCnImfMv2zifYDPZXO19wiPYxMzQ1MDEzNzU3",
-      "state": "xyz"
-    }
+{ 
+  "code": "O0RfagVSxCn6svUlxLQvSNSpCCnImfMv2zifYDPZXO19wiPYxMzQ1MDEzNzU3",
+  "state": "xyz"
+}
 ```
 
 ## Step 3
@@ -165,13 +165,13 @@ A successful response will include: access_token, refresh_token, expires_in, tok
 be included in the response
 
 ```json
-    { 
-      "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
-      "token_type": "Bearer",
-      "expires_in": 3600,
-      "refresh_token": "QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2",
-      "state": "xyz"
-    }
+{ 
+  "access_token": "PZGRzqCZhuc4dGsBNO6hEkHCNFvx2HfqrIgcGJifHilPDQGpNwxMzQ1MDE0NDQ2",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "QUpDsfIg2mCTe5taePulQyfJi8QLk3rdUBEGPrpqGPKSfKocUxMzQ1MDE0NDQ2",
+  "state": "xyz"
+}
 ```
 
 ## Client Credentials
